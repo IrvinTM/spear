@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Spear — Tailwind v4 Theme
+   ============================================================ */
+
+@theme {
+  /* Colors — warm neutral palette */
+  --color-stone-50: #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: #e7e5e4;
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-600: #57534e;
+  --color-stone-700: #44403c;
+  --color-stone-800: #292524;
+  --color-stone-900: #1c1917;
+  --color-stone-950: #0c0a09;
+
+  /* Accent — teal */
+  --color-accent-50: #f0fdfa;
+  --color-accent-100: #ccfbf1;
+  --color-accent-200: #99f6e4;
+  --color-accent-300: #5eead4;
+  --color-accent-400: #2dd4bf;
+  --color-accent-500: #14b8a6;
+  --color-accent-600: #0d9488;
+  --color-accent-700: #0f766e;
+  --color-accent-800: #115e59;
+  --color-accent-900: #134e4a;
+
+  /* Status colors */
+  --color-success: #22c55e;
+  --color-success-muted: #166534;
+  --color-warning: #f59e0b;
+  --color-warning-muted: #92400e;
+  --color-danger: #ef4444;
+  --color-danger-muted: #991b1b;
+  --color-info: #3b82f6;
+  --color-info-muted: #1e40af;
+
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.4s ease both;
+  --animate-slide-up: slide-up 0.5s ease both;
+  --animate-spin-slow: spin 0.7s linear infinite;
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* ============================================================
+   Base Styles
+   ============================================================ */
+
+@layer base {
+  html {
+    height: 100%;
+    color-scheme: dark;
+  }
+
+  body {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-sans);
+    color: var(--color-stone-50);
+    background: var(--color-stone-950);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Subtle noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px;
+  }
+}
+
+/* ============================================================
+   Component Styles (things hard to express purely in utilities)
+   ============================================================ */
+
+@layer components {
+  /* Password strength bars */
+  .pw-bar {
+    @apply h-0.5 flex-1 rounded-full bg-stone-700 transition-colors duration-200;
+  }
+  .pw-bar--weak { background: var(--color-danger); }
+  .pw-bar--fair { background: var(--color-warning); }
+  .pw-bar--good { background: var(--color-success); }
+
+  /* Stepper connector */
+  .stepper-connector {
+    @apply flex-1 h-0.5 rounded-full bg-stone-700 min-w-5 transition-colors duration-200;
+  }
+  .stepper-connector--done {
+    background: var(--color-accent-600);
+  }
+
+  /* Stepper step dot */
+  .step-dot {
+    @apply flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold shrink-0 transition-all duration-200;
+  }
+  .step-dot--done {
+    @apply bg-accent-600 text-white;
+  }
+  .step-dot--active {
+    @apply bg-accent-500 text-white;
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.25);
+  }
+  .step-dot--pending {
+    @apply bg-stone-700 text-stone-500 border border-stone-600;
+  }
+
+  /* Glow shadow for primary buttons */
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.15);
+  }
+
+  /* Status dot with glow */
+  .status-glow-success {
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+  }
+  .status-glow-warning {
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+  }
+  .status-glow-danger {
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+  }
+
+  /* Spinner */
+  .spinner {
+    @apply inline-block rounded-full animate-spin-slow;
+    border: 2px solid var(--color-stone-700);
+    border-top-color: var(--color-accent-400);
+  }
+  .spinner--sm {
+    @apply w-3.5 h-3.5;
+    border-width: 1.5px;
+  }
+  .spinner--md {
+    @apply w-5 h-5;
+  }
+  .spinner--lg {
+    @apply w-8 h-8;
+    border-width: 3px;
+  }
+}
