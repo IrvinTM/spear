@@ -13,53 +13,8 @@ export default async function MaterialsPage() {
   const courseGroups = await getMaterials();
 
   return (
-    <div className="min-h-screen bg-stone-950 flex">
-      {/* Sidebar (same as dashboard, ideally we'd extract it to a layout, but keeping it inline for speed) */}
-      <aside className="w-60 h-screen fixed top-0 left-0 bg-stone-900 border-r border-white/[0.06] flex flex-col p-6 z-50 max-md:hidden">
-        <div className="flex items-center gap-3 px-3 mb-8">
-          <div className="w-7 h-7 rounded-md bg-accent-600 flex items-center justify-center text-sm font-bold text-white">
-            C
-          </div>
-          <span className="text-base font-semibold tracking-tight">Spear</span>
-        </div>
-
-        <nav className="flex flex-col gap-1 flex-1">
-          <a
-            href="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-all"
-          >
-            <span className="w-5 text-center">📋</span>
-            Todos
-          </a>
-          <a
-            href="/materials"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-accent-500/10 text-accent-400"
-          >
-            <span className="w-5 text-center">📚</span>
-            Materials
-          </a>
-          <a
-            href="/email"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-all"
-          >
-            <span className="w-5 text-center">✉️</span>
-            Email
-          </a>
-        </nav>
-
-        <div className="border-t border-white/[0.06] pt-4">
-          <a
-            href="/settings"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-all"
-          >
-            <span className="w-5 text-center">⚙️</span>
-            Settings
-          </a>
-        </div>
-      </aside>
-
-      <main className="ml-60 max-md:ml-0 flex-1 min-h-screen p-8 max-md:p-4">
-        <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
+    <>
+      <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight mb-1">Course Materials</h1>
             <p className="text-sm text-stone-400">
@@ -114,7 +69,6 @@ export default async function MaterialsPage() {
             ))}
           </div>
         )}
-      </main>
-    </div>
+    </>
   );
 }

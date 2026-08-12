@@ -53,27 +53,19 @@ let agyCommandPath: string | null | false = null;
 const execAsync = promisify(exec);
 
 /**
- * Resolves the agy binary path, checking common locations.
+ * Resolves the agy binary path via env var or PATH lookup.
  */
 async function resolveAgyPath(): Promise<string | false> {
-  // Check well-known install locations first
-  const candidates = [
-    '/home/irvin/.local/bin/agy',
-  ];
-
-  const { existsSync } = await import('node:fs');
-  for (const p of candidates) {
-    if (existsSync(p)) return p;
+  // 1. Explicit env var override
+  if (process.env.AGY_PATH) {
+    const { existsSync } = await import('node:fs');
+    if (existsSync(process.env.AGY_PATH)) return process.env.AGY_PATH;
   }
 
-  // Fallback: ask the shell
+  // 2. Ask the shell
   try {
     const { stdout } = await execAsync('which agy', {
       shell: '/bin/bash',
-      env: {
-        ...process.env,
-        PATH: `${process.env.PATH || ''}:/home/irvin/.local/bin`,
-      },
     });
     const trimmed = stdout.trim();
     if (trimmed) return trimmed;

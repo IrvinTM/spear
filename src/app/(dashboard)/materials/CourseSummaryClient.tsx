@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { generateAiSummary } from '@/app/materials/actions';
+import { generateAiSummary } from './actions';
 
 export function CourseSummaryClient({ courseId, rawSummary }: { courseId: number; rawSummary: string }) {
   const [summary, setSummary] = useState<string>(rawSummary && rawSummary.startsWith('Secciones:') ? '' : rawSummary);

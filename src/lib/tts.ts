@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 
-const PIPER_PATH = '/home/irvin/.local/share/piper/piper';
-const MODEL_PATH = '/home/irvin/.local/share/piper/es_AR-daniela-high.onnx';
+const PIPER_PATH = process.env.PIPER_PATH || 'piper';
+const MODEL_PATH = process.env.PIPER_MODEL_PATH || 'es_AR-daniela-high.onnx';
 
 export async function generateAudio(text: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {

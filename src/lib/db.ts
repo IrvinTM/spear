@@ -1,21 +1,9 @@
 import Database from 'better-sqlite3';
 import path from 'node:path';
 import fs from 'node:fs';
-import os from 'node:os';
+import { getAgentHome } from '@/lib/config';
 
 let dbInstance: Database.Database | null = null;
-
-/**
- * Returns the agent home directory.
- * Configurable via UES_AGENT_HOME env var, defaults to ~/.ues-agent
- */
-function getAgentHome(): string {
-  const customHome = process.env.UES_AGENT_HOME;
-  if (customHome) {
-    return path.resolve(customHome);
-  }
-  return path.join(os.homedir(), '.ues-agent');
-}
 
 /**
  * Determines the database file path and ensures the directory exists.
@@ -172,11 +160,8 @@ export function initSchema(): void {
   `);
 }
 
-// Register process exit handlers to close the database cleanly
-process.on('exit', () => closeDb());
-process.on('SIGHUP', () => { closeDb(); process.exit(128 + 1); });
-process.on('SIGINT', () => { closeDb(); process.exit(128 + 2); });
-process.on('SIGTERM', () => { closeDb(); process.exit(128 + 15); });
+// Note: better-sqlite3 handles cleanup automatically via its native destructor.
+// Do not register process signal handlers here — it interferes with Next.js lifecycle.
 
 export function getGlobalContext() {
   const db = getDb();

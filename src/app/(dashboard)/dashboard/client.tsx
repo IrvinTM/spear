@@ -7,9 +7,9 @@ import {
   updateTodoStatus,
   getSyncStatus,
   getTodos,
-  type SyncStatus,
-  type TodoItem,
+  createSessionAction,
 } from './actions';
+import type { SyncStatus, TodoItem } from '@/lib/types';
 
 function formatRelativeDate(dateStr: string | null): string {
   if (!dateStr) return 'Never';
@@ -85,23 +85,43 @@ export function DashboardClient({
   const [syncError, setSyncError] = useState('');
 
   const handleSync = () => {
-    if (!masterPassword) {
-      setShowPasswordModal(true);
-      return;
-    }
     doSync();
   };
 
   const doSync = () => {
     setSyncError('');
     startSync(async () => {
-      const formData = new FormData();
-      formData.append('masterPassword', masterPassword);
-      const result = await triggerMoodleSync(formData);
+      const result = await triggerMoodleSync();
       if (!result.success) {
+        if (result.needsAuth) {
+          setShowPasswordModal(true);
+          return;
+        }
         setSyncError(result.error || 'Sync failed');
       }
       // Refresh data
+      const [newStatus, newTodos] = await Promise.all([getSyncStatus(), getTodos()]);
+      setSyncStatus(newStatus);
+      setTodos(newTodos);
+    });
+  };
+
+  const submitModal = () => {
+    startSync(async () => {
+      setSyncError('');
+      const formData = new FormData();
+      formData.append('masterPassword', masterPassword);
+      const authResult = await createSessionAction(formData);
+      if (!authResult.success) {
+        setSyncError(authResult.error || 'Auth failed');
+        return;
+      }
+      setMasterPassword(''); // clear from client state
+      // Now actually sync
+      const result = await triggerMoodleSync();
+      if (!result.success) {
+        setSyncError(result.error || 'Sync failed');
+      }
       const [newStatus, newTodos] = await Promise.all([getSyncStatus(), getTodos()]);
       setSyncStatus(newStatus);
       setTodos(newTodos);
@@ -119,55 +139,9 @@ export function DashboardClient({
   };
 
   return (
-    <div className="min-h-screen bg-stone-950">
-      {/* Sidebar */}
-      <aside className="w-60 h-screen fixed top-0 left-0 bg-stone-900 border-r border-white/[0.06] flex flex-col p-6 z-50 max-md:hidden">
-        <div className="flex items-center gap-3 px-3 mb-8">
-          <div className="w-7 h-7 rounded-md bg-accent-600 flex items-center justify-center text-sm font-bold text-white">
-            C
-          </div>
-          <span className="text-base font-semibold tracking-tight">Spear</span>
-        </div>
-
-        <nav className="flex flex-col gap-1 flex-1">
-          <a
-            href="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-accent-500/10 text-accent-400"
-          >
-            <span className="w-5 text-center">📋</span>
-            Todos
-          </a>
-          <a
-            href="/materials"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-all"
-          >
-            <span className="w-5 text-center">📚</span>
-            Materials
-          </a>
-          <a
-            href="/email"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-all"
-          >
-            <span className="w-5 text-center">✉️</span>
-            Email
-          </a>
-        </nav>
-
-        <div className="border-t border-white/[0.06] pt-4">
-          <a
-            href="/settings"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-all"
-          >
-            <span className="w-5 text-center">⚙️</span>
-            Settings
-          </a>
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <main className="ml-60 max-md:ml-0 min-h-screen p-8 max-md:p-4">
-        {/* Header */}
-        <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
+    <>
+      {/* Header */}
+      <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight mb-1">Todos</h1>
             <p className="text-sm text-stone-400">
@@ -328,9 +302,6 @@ export function DashboardClient({
             })}
           </div>
         )}
-      </main>
-
-      {/* Password modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-stone-900 border border-white/[0.06] rounded-2xl p-8 shadow-2xl w-full max-w-sm animate-slide-up">
@@ -346,7 +317,7 @@ export function DashboardClient({
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && masterPassword) {
                   setShowPasswordModal(false);
-                  doSync();
+                  submitModal();
                 }
               }}
               autoFocus
@@ -363,7 +334,7 @@ export function DashboardClient({
                 onClick={() => {
                   if (masterPassword) {
                     setShowPasswordModal(false);
-                    doSync();
+                    submitModal();
                   }
                 }}
                 className="flex-1 px-4 py-2.5 rounded-lg bg-accent-600 text-white text-sm font-medium border border-accent-700 hover:bg-accent-500 hover:shadow-glow transition-all cursor-pointer"
@@ -374,6 +345,6 @@ export function DashboardClient({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
