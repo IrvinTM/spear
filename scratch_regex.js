@@ -1,7 +1,13 @@
 const fs = require('fs');
-const html = fs.readFileSync('/home/irvin/spear/moodle_dump.html', 'utf8');
-const regex = /<a\s+title="([^"]+)"\s+href="https:\/\/campus\.ues\.edu\.sv\/course\/view\.php\?id=(\d+)"[^>]*>.*?<\/i>\s*([^<]+)<\/a>/g;
+const html = fs.readFileSync('course_dump.html', 'utf8');
+const regex = /<a[^>]*href="[^"]*?\/mod\/([^/]+)\/view\.php\?id=(\d+)"[^>]*>([\s\S]*?)<\/a>/g;
 let match;
 while ((match = regex.exec(html)) !== null) {
-  console.log(`ID: ${match[2]}, Short: ${match[1]}, Full: ${match[3].trim()}`);
+  const type = match[1];
+  const id = match[2];
+  const innerHtml = match[3];
+  const nameMatch = /<span\s+class="instancename"[^>]*>([^<]+)/.exec(innerHtml);
+  if (nameMatch) {
+    console.log(`Type: ${type}, ID: ${id}, Name: ${nameMatch[1].trim()}`);
+  }
 }

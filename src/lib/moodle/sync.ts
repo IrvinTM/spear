@@ -132,6 +132,17 @@ async function syncAssignments(
     VALUES (@title, @description, 'assignment', @source_id, @due_date, 'pending', 0, @created_at, @updated_at)
   `);
 
+  const checkMaterialExists = db.prepare('SELECT id FROM materials WHERE moodle_id = ?');
+  const updateMaterial = db.prepare(`
+    UPDATE materials SET
+      name = @name, type = @type, url = @url, last_synced_at = @last_synced_at
+    WHERE moodle_id = @moodle_id
+  `);
+  const insertMaterial = db.prepare(`
+    INSERT INTO materials (course_id, moodle_id, name, type, url, last_synced_at, created_at)
+    VALUES (@course_id, @moodle_id, @name, @type, @url, @last_synced_at, @created_at)
+  `);
+
   let assignmentsCount = 0;
   let todosCreated = 0;
 
@@ -179,6 +190,30 @@ async function syncAssignments(
             updated_at: now,
           });
           todosCreated++;
+        }
+      }
+    }
+
+    if (courseData.materials) {
+      for (const m of courseData.materials) {
+        if (checkMaterialExists.get(m.id)) {
+          updateMaterial.run({
+            moodle_id: m.id,
+            name: m.name,
+            type: m.type,
+            url: m.url,
+            last_synced_at: now,
+          });
+        } else {
+          insertMaterial.run({
+            course_id: localCourseId,
+            moodle_id: m.id,
+            name: m.name,
+            type: m.type,
+            url: m.url,
+            last_synced_at: now,
+            created_at: now,
+          });
         }
       }
     }

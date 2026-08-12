@@ -33,6 +33,13 @@ export interface MoodleAssignment {
   introattachments?: MoodleAttachment[];
 }
 
+export interface ExtractedMaterial {
+  id: number;
+  type: string;
+  name: string;
+  url: string;
+}
+
 export interface MoodleAttachment {
   filename: string;
   fileurl: string;
@@ -127,8 +134,8 @@ export async function fetchAssignments(
   sm: SessionManager,
   session: MoodleSession,
   courseIds: number[],
-): Promise<{ courses: { id: number; assignments: MoodleAssignment[]; summary?: string }[] }> {
-  const result = { courses: [] as { id: number; assignments: MoodleAssignment[]; summary?: string }[] };
+): Promise<{ courses: { id: number; assignments: MoodleAssignment[]; materials: ExtractedMaterial[]; summary?: string }[] }> {
+  const result = { courses: [] as { id: number; assignments: MoodleAssignment[]; materials: ExtractedMaterial[]; summary?: string }[] };
 
   for (const courseId of courseIds) {
     const res = await fetch(`${sm['baseUrl']}/course/view.php?id=${courseId}`, {
@@ -165,15 +172,29 @@ export async function fetchAssignments(
       sections.push(secMatch[1].trim());
     }
     
-    const materials: string[] = [];
-    const matRegex = /<span class="instancename"[^>]*>([^<]+)/g;
-    let matMatch;
-    while ((matMatch = matRegex.exec(html)) !== null) {
-      materials.push(matMatch[1].trim());
+    const materialsNames: string[] = [];
+    const materials: ExtractedMaterial[] = [];
+    const regex = /<a[^>]*href="[^"]*?\/mod\/([^/]+)\/view\.php\?id=(\d+)"[^>]*>([\s\S]*?)<\/a>/g;
+    let matLinkMatch;
+    while ((matLinkMatch = regex.exec(html)) !== null) {
+      const type = matLinkMatch[1];
+      const id = parseInt(matLinkMatch[2], 10);
+      const innerHtml = matLinkMatch[3];
+      const nameMatch = /<span\s+class="instancename"[^>]*>([^<]+)/.exec(innerHtml);
+      if (nameMatch) {
+        const name = nameMatch[1].replace(' Tarea', '').trim();
+        materials.push({
+          id,
+          type,
+          name,
+          url: `${sm['baseUrl']}/mod/${type}/view.php?id=${id}`,
+        });
+        materialsNames.push(name);
+      }
     }
     
-    const summary = `Secciones: ${sections.join(', ')}\nMateriales: ${materials.join(', ')}`;
-    result.courses.push({ id: courseId, assignments, summary });
+    const summary = `Secciones: ${sections.join(', ')}\nMateriales: ${materialsNames.join(', ')}`;
+    result.courses.push({ id: courseId, assignments, materials, summary });
   }
 
   return result;
