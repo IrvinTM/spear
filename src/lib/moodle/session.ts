@@ -59,9 +59,9 @@ function extractMoodleCookie(headers: Headers): string | null {
   }
 
   for (const cookieStr of cookies) {
-    const match = cookieStr.match(/MoodleSession=([^;]+)/i);
+    const match = cookieStr.match(/MoodleSession[^=]*=[^;]+/i);
     if (match) {
-      return match[1];
+      return match[0];
     }
   }
 
@@ -117,49 +117,55 @@ export class SessionManager {
     }
     const logintoken = loginTokenMatch[1];
 
-    // Step 2: POST login form
+    // Step 2: POST login form and manually follow redirects
     const body = new URLSearchParams();
     body.append('username', username);
     body.append('password', password);
     body.append('logintoken', logintoken);
     body.append('anchor', '');
 
-    const postRes = await fetch(loginUrl, {
+    let currentUrl = loginUrl;
+    let res = await fetch(currentUrl, {
       method: 'POST',
       headers: {
         'User-Agent': DEFAULT_USER_AGENT,
         'Content-Type': 'application/x-www-form-urlencoded',
-        Cookie: `MoodleSession=${moodleCookie}`,
+        Cookie: moodleCookie,
       },
       body: body.toString(),
       redirect: 'manual',
     });
 
-    const newCookie = extractMoodleCookie(postRes.headers);
-    if (newCookie) {
-      moodleCookie = newCookie;
+    let redirectCount = 0;
+    while ((res.status === 302 || res.status === 303) && redirectCount < 5) {
+      const newCookie = extractMoodleCookie(res.headers);
+      if (newCookie) {
+        moodleCookie = newCookie;
+      }
+      const loc = res.headers.get('location');
+      if (!loc) break;
+      currentUrl = loc;
+      res = await fetch(currentUrl, {
+        method: 'GET',
+        headers: {
+          'User-Agent': DEFAULT_USER_AGENT,
+          Cookie: moodleCookie,
+        },
+        redirect: 'manual',
+      });
+      redirectCount++;
     }
 
-    // Moodle replies 302/303 on success
-    if (postRes.status !== 303 && postRes.status !== 302) {
-      const postHtml = await postRes.text();
-      if (postHtml.includes('logintoken')) {
+    if (!currentUrl.includes('/my/')) {
+      // If we didn't end up on the dashboard, login failed
+      const finalHtml = await res.text();
+      if (finalHtml.includes('logintoken')) {
         throw new MoodleAuthError('Login failed: Invalid credentials or CAPTCHA required');
       }
-      throw new MoodleAuthError(`Login failed with status ${postRes.status}`);
+      throw new MoodleAuthError(`Login failed. Ended up at ${currentUrl}`);
     }
 
-    // Step 3: GET /my/ → extract sesskey + userId
-    const myRes = await fetch(`${this.baseUrl}/my/`, {
-      method: 'GET',
-      headers: {
-        'User-Agent': DEFAULT_USER_AGENT,
-        Cookie: `MoodleSession=${moodleCookie}`,
-      },
-      redirect: 'follow',
-    });
-
-    const myHtml = await myRes.text();
+    const myHtml = await res.text();
 
     // Extract sesskey
     const sesskeyMatch =
@@ -226,7 +232,7 @@ export class SessionManager {
       headers: {
         'User-Agent': DEFAULT_USER_AGENT,
         'Content-Type': 'application/json',
-        Cookie: `MoodleSession=${session.moodleSessionCookie}`,
+        Cookie: session.moodleSessionCookie,
         Accept: 'application/json, text/javascript, */*; q=0.01',
       },
       body: JSON.stringify(payload),

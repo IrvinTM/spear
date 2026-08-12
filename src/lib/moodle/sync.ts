@@ -136,6 +136,9 @@ async function syncAssignments(
   let todosCreated = 0;
 
   for (const courseData of response.courses) {
+    if (courseData.summary) {
+      db.prepare(`UPDATE courses SET summary = ? WHERE moodle_id = ?`).run(courseData.summary, courseData.id);
+    }
     const localCourseId = courseMap.get(courseData.id);
     if (!localCourseId) continue;
 
@@ -225,6 +228,8 @@ export async function syncMoodle(
   } catch (err) {
     errorMsg = err instanceof Error ? err.message : 'Unknown sync error';
     success = false;
+    const fs = require('fs');
+    fs.writeFileSync('/home/irvin/spear/sync_error.txt', err instanceof Error ? (err.stack || err.message) : String(err));
   }
 
   // Update sync log

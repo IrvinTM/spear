@@ -23,7 +23,9 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
     setSyncError('');
     setSyncSuccessMsg('');
     startSync(async () => {
-      const result = await triggerEmailSync(masterPassword);
+      const formData = new FormData();
+      formData.append('masterPassword', masterPassword);
+      const result = await triggerEmailSync(formData);
       if (!result.success) {
         setSyncError(result.error || 'Sync failed');
       } else {

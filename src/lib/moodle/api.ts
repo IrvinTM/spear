@@ -81,6 +81,10 @@ export interface MoodleModuleContent {
 /*  Fetch Functions                                                   */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/*  Fetch Functions (Scraping Fallback)                               */
+/* ------------------------------------------------------------------ */
+
 /**
  * Fetch all enrolled courses for the current user.
  */
@@ -88,9 +92,32 @@ export async function fetchCourses(
   sm: SessionManager,
   session: MoodleSession,
 ): Promise<MoodleCourse[]> {
-  return sm.callApi<MoodleCourse[]>(session, 'core_enrol_get_users_courses', {
-    userid: session.userId,
+  const res = await fetch(`${sm['baseUrl']}/my/`, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      Cookie: session.moodleSessionCookie,
+    },
   });
+  if (!res.ok) throw new Error(`Failed to fetch dashboard: ${res.status}`);
+  const html = await res.text();
+
+  const courses: MoodleCourse[] = [];
+  const regex = /<a\s+title="([^"]+)"\s+href="https:\/\/campus\.ues\.edu\.sv\/course\/view\.php\?id=(\d+)"[^>]*>.*?<\/i>\s*([^<]+)<\/a>/g;
+  let match;
+  while ((match = regex.exec(html)) !== null) {
+    courses.push({
+      id: parseInt(match[2], 10),
+      shortname: match[1],
+      fullname: match[3].trim(),
+      visible: 1,
+      startdate: 0,
+      enddate: 0,
+    });
+  }
+
+  // Deduplicate
+  const unique = Array.from(new Map(courses.map((c) => [c.id, c])).values());
+  return unique;
 }
 
 /**
@@ -100,42 +127,57 @@ export async function fetchAssignments(
   sm: SessionManager,
   session: MoodleSession,
   courseIds: number[],
-): Promise<{ courses: { id: number; assignments: MoodleAssignment[] }[] }> {
-  return sm.callApi<{ courses: { id: number; assignments: MoodleAssignment[] }[] }>(
-    session,
-    'mod_assign_get_assignments',
-    { courseids: courseIds },
-  );
+): Promise<{ courses: { id: number; assignments: MoodleAssignment[]; summary?: string }[] }> {
+  const result = { courses: [] as { id: number; assignments: MoodleAssignment[]; summary?: string }[] };
+
+  for (const courseId of courseIds) {
+    const res = await fetch(`${sm['baseUrl']}/course/view.php?id=${courseId}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        Cookie: session.moodleSessionCookie,
+      },
+    });
+    if (!res.ok) continue;
+    const html = await res.text();
+
+    const assignments: MoodleAssignment[] = [];
+    const assignRegex = /href="[^"]*?\/mod\/assign\/view\.php\?id=(\d+)"[^>]*>.*?<span\s+class="instancename"[^>]*>([^<]+)/g;
+    let match;
+    while ((match = assignRegex.exec(html)) !== null) {
+      assignments.push({
+        id: parseInt(match[1], 10),
+        cmid: parseInt(match[1], 10),
+        course: courseId,
+        name: match[2].replace(' Tarea', '').trim(),
+        intro: '',
+        introformat: 1,
+        duedate: 0,
+        allowsubmissionsfromdate: 0,
+        grade: 10,
+      });
+    }
+    
+    // Extract course outline for summary
+    const sections: string[] = [];
+    const sectionRegex = /<li\s+class="nav-item[^>]*>\s*<a\s+class="nav-link[^>]*title="([^"]+)"/g;
+    let secMatch;
+    while ((secMatch = sectionRegex.exec(html)) !== null) {
+      sections.push(secMatch[1].trim());
+    }
+    
+    const materials: string[] = [];
+    const matRegex = /<span class="instancename"[^>]*>([^<]+)/g;
+    let matMatch;
+    while ((matMatch = matRegex.exec(html)) !== null) {
+      materials.push(matMatch[1].trim());
+    }
+    
+    const summary = `Secciones: ${sections.join(', ')}\nMateriales: ${materials.join(', ')}`;
+    result.courses.push({ id: courseId, assignments, summary });
+  }
+
+  return result;
 }
 
-/**
- * Fetch upcoming calendar events (next 30 days).
- */
-export async function fetchCalendarEvents(
-  sm: SessionManager,
-  session: MoodleSession,
-): Promise<MoodleCalendarEvent[]> {
-  const timesortfrom = Math.floor(Date.now() / 1000);
-  const timesortto = timesortfrom + 30 * 24 * 3600;
-
-  const result = await sm.callApi<{ events: MoodleCalendarEvent[] }>(
-    session,
-    'core_calendar_get_action_events_by_timesort',
-    { timesortfrom, timesortto, limitnum: 100 },
-  );
-
-  return result.events;
-}
-
-/**
- * Fetch course contents (sections with modules and files).
- */
-export async function fetchCourseContents(
-  sm: SessionManager,
-  session: MoodleSession,
-  courseId: number,
-): Promise<MoodleCourseSection[]> {
-  return sm.callApi<MoodleCourseSection[]>(session, 'core_course_get_contents', {
-    courseid: courseId,
-  });
-}
+export async function fetchCalendarEvents() { return []; }
+export async function fetchCourseContents() { return []; }

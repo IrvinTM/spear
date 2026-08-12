@@ -36,10 +36,16 @@ export async function getSetupState(): Promise<SetupState> {
  * Also initializes the database schema.
  */
 export async function setupVault(
-  masterPassword: string,
-  credentials: VaultCredentials,
+  formData: FormData,
 ): Promise<ActionResult> {
   try {
+    const masterPassword = formData.get('masterPassword') as string;
+    const credentials = {
+      uesUsername: formData.get('uesUsername') as string,
+      uesPassword: formData.get('uesPassword') as string,
+      gmailAppPassword: (formData.get('gmailAppPassword') as string) || undefined,
+    };
+
     if (masterPassword.length < 8) {
       return { success: false, error: 'Master password must be at least 8 characters.' };
     }
@@ -64,9 +70,10 @@ export async function setupVault(
  * Validates the master password against an existing vault.
  */
 export async function unlockExistingVault(
-  masterPassword: string,
+  formData: FormData,
 ): Promise<ActionResult> {
   try {
+    const masterPassword = formData.get('masterPassword') as string;
     const valid = await validateMasterPassword(masterPassword);
     if (!valid) {
       return { success: false, error: 'Incorrect master password.' };

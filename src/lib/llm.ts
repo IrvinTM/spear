@@ -58,7 +58,7 @@ const execAsync = promisify(exec);
 async function resolveAgyPath(): Promise<string | false> {
   // Check well-known install locations first
   const candidates = [
-    '/home/tm22012/.local/bin/agy',
+    '/home/irvin/.local/bin/agy',
   ];
 
   const { existsSync } = await import('node:fs');
@@ -72,7 +72,7 @@ async function resolveAgyPath(): Promise<string | false> {
       shell: '/bin/bash',
       env: {
         ...process.env,
-        PATH: `${process.env.PATH || ''}:/home/tm22012/.local/bin`,
+        PATH: `${process.env.PATH || ''}:/home/irvin/.local/bin`,
       },
     });
     const trimmed = stdout.trim();
@@ -118,7 +118,6 @@ function buildArgs(
 ): string[] {
   const timeoutStr = `${Math.ceil(timeoutMs / 1000)}s`;
   const args = [
-    '--print',
     '--output-format', format,
     '--model', model,
     '--print-timeout', timeoutStr,

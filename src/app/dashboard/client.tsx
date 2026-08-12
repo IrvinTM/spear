@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { CopilotChat } from '@/components/CopilotChat';
 import {
   triggerMoodleSync,
   updateTodoStatus,
@@ -94,7 +95,9 @@ export function DashboardClient({
   const doSync = () => {
     setSyncError('');
     startSync(async () => {
-      const result = await triggerMoodleSync(masterPassword);
+      const formData = new FormData();
+      formData.append('masterPassword', masterPassword);
+      const result = await triggerMoodleSync(formData);
       if (!result.success) {
         setSyncError(result.error || 'Sync failed');
       }
@@ -212,14 +215,20 @@ export function DashboardClient({
 
         {/* Sync error */}
         {syncError && (
-          <div className="flex items-start gap-3 p-4 rounded-lg bg-danger/[0.08] border border-danger/20 text-sm text-red-300 mb-6 animate-fade-in">
-            <span>❌</span>
+          <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
+            <span className="text-red-400 mt-0.5">❌</span>
             <div>
-              <p className="font-medium">Sync failed</p>
-              <p className="text-xs text-red-400 mt-1">{syncError}</p>
+              <p className="font-medium text-red-200">Sync Failed</p>
+              <p className="text-sm text-red-400/80 mt-1">{syncError}</p>
             </div>
           </div>
         )}
+        
+        {/* Chat Bot Area */}
+        <div className="flex flex-col mb-8 max-w-4xl">
+          <h2 className="text-lg font-semibold mb-4">Tu Copiloto Universitario</h2>
+          <CopilotChat />
+        </div>
 
         {/* Sync stats (when data exists) */}
         {syncStatus.status !== 'never' && (

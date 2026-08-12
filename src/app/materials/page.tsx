@@ -2,7 +2,7 @@ import { getMaterials } from './actions';
 import { isVaultInitialized } from '@/lib/vault';
 import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
+import { CourseSummaryClient } from './CourseSummaryClient';
 
 export default async function MaterialsPage() {
   const vaultExists = await isVaultInitialized();
@@ -83,7 +83,14 @@ export default async function MaterialsPage() {
                 key={group.courseId}
                 className="bg-stone-900 border border-white/[0.06] rounded-xl p-5 shadow-sm"
               >
-                <h3 className="font-semibold mb-4 text-stone-200">{group.courseName}</h3>
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="font-semibold text-stone-200">{group.courseName}</h3>
+                </div>
+                
+                {group.summary && (
+                  <CourseSummaryClient courseId={group.courseId} rawSummary={group.summary} />
+                )}
+
                 {group.materials.length === 0 ? (
                   <p className="text-sm text-stone-500 italic">No materials found for this course.</p>
                 ) : (

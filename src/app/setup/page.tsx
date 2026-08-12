@@ -54,6 +54,17 @@ function Stepper({ currentIndex }: { currentIndex: number }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Shared Card Wrapper                                               */
+/* ------------------------------------------------------------------ */
+const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+  <div
+    className={`bg-stone-900 border border-white/[0.06] rounded-2xl p-8 shadow-lg animate-slide-up ${className}`}
+  >
+    {children}
+  </div>
+);
+
+/* ------------------------------------------------------------------ */
 /*  Page                                                              */
 /* ------------------------------------------------------------------ */
 export default function SetupPage() {
@@ -102,11 +113,14 @@ export default function SetupPage() {
       return;
     }
     startTransition(async () => {
-      const result: ActionResult = await setupVault(masterPassword, {
-        uesUsername: uesUsername.trim(),
-        uesPassword,
-        gmailAppPassword: gmailAppPassword.trim() || undefined,
-      });
+      const formData = new FormData();
+      formData.append('masterPassword', masterPassword);
+      formData.append('uesUsername', uesUsername.trim());
+      formData.append('uesPassword', uesPassword);
+      if (gmailAppPassword.trim()) {
+        formData.append('gmailAppPassword', gmailAppPassword.trim());
+      }
+      const result: ActionResult = await setupVault(formData);
       if (!result.success) {
         setError(result.error || 'Failed to create vault.');
         return;
@@ -116,15 +130,6 @@ export default function SetupPage() {
       goNext();
     });
   }, [uesUsername, uesPassword, gmailAppPassword, masterPassword, goNext]);
-
-  /* shared card wrapper */
-  const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-    <div
-      className={`bg-stone-900 border border-white/[0.06] rounded-2xl p-8 shadow-lg animate-slide-up ${className}`}
-    >
-      {children}
-    </div>
-  );
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">

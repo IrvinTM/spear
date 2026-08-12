@@ -42,8 +42,11 @@ export async function getEmails(): Promise<EmailItem[]> {
   }
 }
 
-export async function triggerEmailSync(masterPassword: string): Promise<{ success: boolean; emailsFetched?: number; todosCreated?: number; error?: string }> {
+export async function triggerEmailSync(
+  formData: FormData,
+): Promise<{ success: boolean; emailsFetched?: number; todosCreated?: number; error?: string }> {
   try {
+    const masterPassword = formData.get('masterPassword') as string;
     const creds = await unlockVault(masterPassword);
     
     if (!creds.gmailAppPassword) {

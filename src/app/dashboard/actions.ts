@@ -130,7 +130,7 @@ export async function updateTodoStatus(
  * Triggers a Moodle sync. Returns the sync result.
  */
 export async function triggerMoodleSync(
-  masterPassword: string,
+  formData: FormData,
 ): Promise<{
   success: boolean;
   coursesCount?: number;
@@ -139,6 +139,7 @@ export async function triggerMoodleSync(
   error?: string;
 }> {
   try {
+    const masterPassword = formData.get('masterPassword') as string;
     const creds = await unlockVault(masterPassword);
     const { syncMoodle } = await import('@/lib/moodle/sync');
     const result = await syncMoodle(creds.uesUsername, creds.uesPassword);
