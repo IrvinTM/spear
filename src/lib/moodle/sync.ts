@@ -263,8 +263,7 @@ export async function syncMoodle(
   } catch (err) {
     errorMsg = err instanceof Error ? err.message : 'Unknown sync error';
     success = false;
-    const fs = require('fs');
-    fs.writeFileSync('/home/irvin/spear/sync_error.txt', err instanceof Error ? (err.stack || err.message) : String(err));
+    console.error('[Moodle Sync Error]', err);
   }
 
   // Update sync log

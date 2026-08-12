@@ -2,28 +2,23 @@
 
 import { unlockVault } from '@/lib/vault';
 
+import { createSession, getSessionCredentials } from '@/lib/auth-session';
+
 /**
- * Retrieves the decrypted credentials from the vault.
- * Requires the master password (stored in session/cookie in a real implementation).
- * For now, accepts it as a parameter.
+ * Validates the master password, unlocks the vault, and creates a secure server session.
  */
-export async function getCredentials(masterPassword: string) {
+export async function createSessionAction(formData: FormData) {
   try {
+    const masterPassword = formData.get('masterPassword') as string;
     const creds = await unlockVault(masterPassword);
-    return { success: true as const, credentials: creds };
+    await createSession(creds);
+    return { success: true as const };
   } catch {
-    return { success: false as const, error: 'Failed to unlock vault.' };
+    return { success: false as const, error: 'Failed to unlock vault. Incorrect password?' };
   }
 }
 
-export interface SyncStatus {
-  lastSync: string | null;
-  status: 'success' | 'partial' | 'failed' | 'never';
-  coursesCount: number;
-  assignmentsCount: number;
-  todosCount: number;
-  error?: string;
-}
+import type { SyncStatus, TodoItem } from '@/lib/types';
 
 /**
  * Gets the current sync status from the database.
@@ -61,15 +56,7 @@ export async function getSyncStatus(): Promise<SyncStatus> {
   }
 }
 
-export interface TodoItem {
-  id: number;
-  title: string;
-  description: string | null;
-  sourceType: string;
-  dueDate: string | null;
-  status: string;
-  courseName?: string;
-}
+
 
 /**
  * Gets all active todos (pending and in_progress), sorted by due date.
@@ -130,17 +117,20 @@ export async function updateTodoStatus(
  * Triggers a Moodle sync. Returns the sync result.
  */
 export async function triggerMoodleSync(
-  formData: FormData,
-): Promise<{
+  ): Promise<{
   success: boolean;
   coursesCount?: number;
   assignmentsCount?: number;
   todosCreated?: number;
   error?: string;
+  needsAuth?: boolean;
 }> {
   try {
-    const masterPassword = formData.get('masterPassword') as string;
-    const creds = await unlockVault(masterPassword);
+    const creds = await getSessionCredentials();
+    if (!creds) {
+      return { success: false, needsAuth: true, error: 'Session expired or not unlocked.' };
+    }
+    
     const { syncMoodle } = await import('@/lib/moodle/sync');
     const result = await syncMoodle(creds.uesUsername, creds.uesPassword);
 

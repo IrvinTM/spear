@@ -1,8 +1,7 @@
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import { getDb } from '@/lib/db';
-import { streamText } from '@/lib/llm';
-import { checkLlmStatus } from '@/app/setup/actions';
+import { streamText, isAgyAvailable } from '@/lib/llm';
 
 export interface EmailSyncResult {
   success: boolean;
@@ -17,8 +16,8 @@ export interface EmailSyncResult {
  */
 async function processEmailWithLlm(subject: string, text: string): Promise<{ summary: string; deadline: string | null; hasDeadline: boolean }> {
   try {
-    const status = await checkLlmStatus();
-    if (!status.available) {
+    const available = await isAgyAvailable();
+    if (!available) {
       return { summary: text.slice(0, 200), deadline: null, hasDeadline: false };
     }
 
@@ -70,7 +69,7 @@ export async function syncEmails(username: string, appPassword: string): Promise
 
   const insertLog = db.prepare(`
     INSERT INTO sync_log (sync_type, status, items_synced, started_at)
-    VALUES ('email', 'pending', 0, datetime('now'))
+    VALUES ('email', 'partial', 0, datetime('now'))
   `);
   const logResult = insertLog.run();
   const logId = logResult.lastInsertRowid;

@@ -1,8 +1,8 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import * as os from 'node:os';
 import argon2 from 'argon2';
+import { getAgentHome } from '@/lib/config';
 
 /**
  * The credentials stored in the vault.
@@ -25,18 +25,6 @@ interface VaultFormat {
 
 const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32;
-
-/**
- * Returns the agent home directory.
- * Configurable via UES_AGENT_HOME env var, defaults to ~/.ues-agent
- */
-export function getAgentHome(): string {
-  const customHome = process.env.UES_AGENT_HOME;
-  if (customHome) {
-    return path.resolve(customHome);
-  }
-  return path.join(os.homedir(), '.ues-agent');
-}
 
 /**
  * Returns the path to the vault file.

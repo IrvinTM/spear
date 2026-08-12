@@ -1,0 +1,59 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+const navItems = [
+  { href: '/', label: 'Todos', icon: '📋' },
+  { href: '/materials', label: 'Materials', icon: '📚' },
+  { href: '/email', label: 'Email', icon: '✉️' },
+];
+
+const activeClass =
+  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-accent-500/10 text-accent-400';
+const inactiveClass =
+  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-all';
+
+export function Sidebar() {
+  const pathname = usePathname();
+
+  return (
+    <aside className="w-60 h-screen fixed top-0 left-0 bg-stone-900 border-r border-white/[0.06] flex flex-col p-6 z-50 max-md:hidden">
+      <div className="flex items-center gap-3 px-3 mb-8">
+        <div className="w-7 h-7 rounded-md bg-accent-600 flex items-center justify-center text-sm font-bold text-white">
+          C
+        </div>
+        <span className="text-base font-semibold tracking-tight">Spear</span>
+      </div>
+
+      <nav className="flex flex-col gap-1 flex-1">
+        {navItems.map(({ href, label, icon }) => {
+          const isActive =
+            href === '/' ? pathname === '/' : pathname.startsWith(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={isActive ? activeClass : inactiveClass}
+            >
+              <span className="w-5 text-center">{icon}</span>
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="border-t border-white/[0.06] pt-4">
+        <Link
+          href="/settings"
+          className={
+            pathname.startsWith('/settings') ? activeClass : inactiveClass
+          }
+        >
+          <span className="w-5 text-center">⚙️</span>
+          Settings
+        </Link>
+      </div>
+    </aside>
+  );
+}

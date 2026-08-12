@@ -1,20 +1,10 @@
 'use server';
 
 import { unlockVault } from '@/lib/vault';
+import { getSessionCredentials } from '@/lib/auth-session';
 import { syncEmails } from '@/lib/email/sync';
 
-export interface EmailItem {
-  id: number;
-  messageId: string;
-  fromAddress: string;
-  fromName: string | null;
-  subject: string;
-  bodyText: string | null;
-  summary: string | null;
-  hasDeadline: boolean;
-  isRead: boolean;
-  receivedAt: string;
-}
+import type { EmailItem } from '@/lib/types';
 
 export async function getEmails(): Promise<EmailItem[]> {
   try {
@@ -43,11 +33,12 @@ export async function getEmails(): Promise<EmailItem[]> {
 }
 
 export async function triggerEmailSync(
-  formData: FormData,
-): Promise<{ success: boolean; emailsFetched?: number; todosCreated?: number; error?: string }> {
+  ): Promise<{ success: boolean; emailsFetched?: number; todosCreated?: number; error?: string; needsAuth?: boolean }> {
   try {
-    const masterPassword = formData.get('masterPassword') as string;
-    const creds = await unlockVault(masterPassword);
+    const creds = await getSessionCredentials();
+    if (!creds) {
+      return { success: false, needsAuth: true, error: 'Session expired or not unlocked.' };
+    }
     
     if (!creds.gmailAppPassword) {
       return { success: false, error: 'Gmail App Password not set in vault.' };

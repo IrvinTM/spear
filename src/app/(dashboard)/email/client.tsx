@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { triggerEmailSync, type EmailItem } from './actions';
+import { triggerEmailSync } from './actions';
+import { createSessionAction } from '../dashboard/actions';
+import type { EmailItem } from '@/lib/types';
 
 export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
   const [emails, setEmails] = useState(initialEmails);
@@ -12,10 +14,6 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
   const [syncSuccessMsg, setSyncSuccessMsg] = useState('');
 
   const handleSync = () => {
-    if (!masterPassword) {
-      setShowPasswordModal(true);
-      return;
-    }
     doSync();
   };
 
@@ -23,56 +21,46 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
     setSyncError('');
     setSyncSuccessMsg('');
     startSync(async () => {
+      const result = await triggerEmailSync();
+      if (!result.success) {
+        if (result.needsAuth) {
+          setShowPasswordModal(true);
+          return;
+        }
+        setSyncError(result.error || 'Sync failed');
+      } else {
+        setSyncSuccessMsg(`Synced ${result.emailsFetched} emails. Created ${result.todosCreated} todos.`);
+        window.location.reload();
+      }
+    });
+  };
+
+  const submitModal = () => {
+    setSyncError('');
+    setSyncSuccessMsg('');
+    startSync(async () => {
       const formData = new FormData();
       formData.append('masterPassword', masterPassword);
-      const result = await triggerEmailSync(formData);
+      const authResult = await createSessionAction(formData);
+      if (!authResult.success) {
+        setSyncError(authResult.error || 'Auth failed');
+        return;
+      }
+      setMasterPassword(''); // clear from client state
+      // Now actually sync
+      const result = await triggerEmailSync();
       if (!result.success) {
         setSyncError(result.error || 'Sync failed');
       } else {
         setSyncSuccessMsg(`Synced ${result.emailsFetched} emails. Created ${result.todosCreated} todos.`);
-        // Reload page to get new emails easily
         window.location.reload();
       }
     });
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 flex">
-      {/* Sidebar */}
-      <aside className="w-60 h-screen fixed top-0 left-0 bg-stone-900 border-r border-white/[0.06] flex flex-col p-6 z-50 max-md:hidden">
-        <div className="flex items-center gap-3 px-3 mb-8">
-          <div className="w-7 h-7 rounded-md bg-accent-600 flex items-center justify-center text-sm font-bold text-white">
-            C
-          </div>
-          <span className="text-base font-semibold tracking-tight">Spear</span>
-        </div>
-
-        <nav className="flex flex-col gap-1 flex-1">
-          <a href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-all">
-            <span className="w-5 text-center">📋</span>
-            Todos
-          </a>
-          <a href="/materials" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-all">
-            <span className="w-5 text-center">📚</span>
-            Materials
-          </a>
-          <a href="/email" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-accent-500/10 text-accent-400">
-            <span className="w-5 text-center">✉️</span>
-            Email
-          </a>
-        </nav>
-
-        <div className="border-t border-white/[0.06] pt-4">
-          <a href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-all">
-            <span className="w-5 text-center">⚙️</span>
-            Settings
-          </a>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="ml-60 max-md:ml-0 flex-1 min-h-screen p-8 max-md:p-4">
-        <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
+    <>
+      <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight mb-1">Institutional Email</h1>
             <p className="text-sm text-stone-400">
@@ -135,7 +123,6 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
             ))}
           </div>
         )}
-      </main>
 
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
@@ -146,17 +133,17 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
               type="password"
               value={masterPassword}
               onChange={(e) => setMasterPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && doSync()}
+              onKeyDown={(e) => e.key === 'Enter' && submitModal()}
               autoFocus
               className="w-full px-4 py-3 rounded-lg bg-stone-950 border border-white/10 text-stone-50 mb-4 focus:border-accent-500 outline-none"
             />
             <div className="flex gap-3">
               <button onClick={() => setShowPasswordModal(false)} className="flex-1 px-4 py-2 bg-stone-700 rounded-lg">Cancel</button>
-              <button onClick={() => { setShowPasswordModal(false); doSync(); }} className="flex-1 px-4 py-2 bg-accent-600 rounded-lg">Sync</button>
+              <button onClick={() => { setShowPasswordModal(false); submitModal(); }} className="flex-1 px-4 py-2 bg-accent-600 rounded-lg">Sync</button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

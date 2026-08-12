@@ -1,20 +1,6 @@
 'use server';
 
-export interface MaterialItem {
-  id: number;
-  courseName: string;
-  name: string;
-  type: string;
-  url: string | null;
-  filename: string | null;
-}
-
-export interface CourseMaterialGroup {
-  courseId: number;
-  courseName: string;
-  materials: MaterialItem[];
-  summary?: string;
-}
+import type { MaterialItem, CourseMaterialGroup } from '@/lib/types';
 
 export async function getMaterials(): Promise<CourseMaterialGroup[]> {
   try {
