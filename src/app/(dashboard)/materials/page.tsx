@@ -1,7 +1,7 @@
 import { getMaterials } from './actions';
 import { isVaultInitialized } from '@/lib/vault';
 import { redirect } from 'next/navigation';
-
+import { EmptyState } from '@/components/EmptyState';
 import { CourseSummaryClient } from './CourseSummaryClient';
 
 export default async function MaterialsPage() {
@@ -24,13 +24,11 @@ export default async function MaterialsPage() {
         </div>
 
         {courseGroups.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="text-5xl mb-4 opacity-30">📚</div>
-            <h2 className="text-lg font-semibold mb-2">No courses found</h2>
-            <p className="text-sm text-stone-400 max-w-xs mx-auto mb-6">
-              Go to the Dashboard and click &quot;Sync Moodle&quot; to fetch your courses.
-            </p>
-          </div>
+          <EmptyState
+            icon="📚"
+            title="No courses found"
+            description='Go to the Dashboard and click "Sync Moodle" to fetch your courses.'
+          />
         ) : (
           <div className="grid gap-6">
             {courseGroups.map((group) => (

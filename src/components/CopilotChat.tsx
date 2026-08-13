@@ -11,6 +11,7 @@ export function CopilotChat() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTalking, setIsTalking] = useState(false);
+  const [isAudioLoading, setIsAudioLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -37,22 +38,42 @@ export function CopilotChat() {
         body: JSON.stringify({ message: userMsg }),
       });
       const data = await res.json();
-      
+
       if (data.text) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.text }]);
-        
-        if (data.audio) {
-          if (audioRef.current) {
-            audioRef.current.pause();
-          }
-          const audio = new Audio(`data:audio/wav;base64,${data.audio}`);
-          audioRef.current = audio;
-          
-          audio.onplay = () => setIsTalking(true);
-          audio.onended = () => setIsTalking(false);
-          audio.onerror = () => setIsTalking(false);
-          audio.play().catch(console.error);
-        }
+
+        // Fetch audio separately so text appears immediately
+        setIsAudioLoading(true);
+        fetch('/api/chat/audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: data.text }),
+        })
+          .then(audioRes => {
+            if (!audioRes.ok) throw new Error('Audio fetch failed');
+            return audioRes.blob();
+          })
+          .then(blob => {
+            const url = URL.createObjectURL(blob);
+            if (audioRef.current) {
+              audioRef.current.pause();
+            }
+            const audio = new Audio(url);
+            audioRef.current = audio;
+
+            audio.onplay = () => setIsTalking(true);
+            audio.onended = () => {
+              setIsTalking(false);
+              URL.revokeObjectURL(url);
+            };
+            audio.onerror = () => {
+              setIsTalking(false);
+              URL.revokeObjectURL(url);
+            };
+            audio.play().catch(console.error);
+          })
+          .catch(err => console.error('TTS Error:', err))
+          .finally(() => setIsAudioLoading(false));
       } else {
         setMessages(prev => [...prev, { role: 'assistant', content: 'Lo siento, ocurrió un error.' }]);
       }
@@ -76,7 +97,7 @@ export function CopilotChat() {
         <div>
           <h2 className="font-semibold text-stone-200">Campus Copilot</h2>
           <p className="text-xs text-accent-400 font-medium">
-            {isTalking ? 'Hablando...' : isLoading ? 'Pensando...' : 'En línea'}
+            {isTalking ? 'Hablando...' : isAudioLoading ? 'Preparando voz...' : isLoading ? 'Pensando...' : 'En línea'}
           </p>
         </div>
       </div>

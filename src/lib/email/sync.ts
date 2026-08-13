@@ -119,9 +119,23 @@ export async function syncEmails(username: string, appPassword: string): Promise
         VALUES (@title, @description, 'email', @source_id, @due_date, 'pending', 0, @created_at, @updated_at)
       `);
 
+      // Phase 1: Fetch and parse all messages, filtering out already-processed ones
+      interface ParsedEmail {
+        msgId: string;
+        fromAddr: string;
+        fromName: string;
+        subject: string;
+        bodyText: string;
+        bodyHtml: string | null;
+        receivedAt: string;
+        isRead: number;
+      }
+
+      const pendingEmails: ParsedEmail[] = [];
+
       for await (const message of messages) {
         const msgId = message.envelope?.messageId || message.uid.toString();
-        
+
         // Skip if already exists
         if (checkExisting.get(msgId)) {
           continue;
@@ -130,31 +144,67 @@ export async function syncEmails(username: string, appPassword: string): Promise
         if (!message.source) continue;
         const parsed = await simpleParser(message.source as Buffer);
         const fromAddr = parsed.from?.value[0]?.address || 'unknown';
-        
+
         // Only process @ues.edu.sv for now to save tokens (could be configurable)
         if (!fromAddr.endsWith('@ues.edu.sv') && !fromAddr.endsWith('@gmail.com')) {
-          // continue; 
+          // continue;
         }
 
-        const subject = parsed.subject || 'No Subject';
-        const bodyText = parsed.text || '';
-        const receivedAt = parsed.date ? parsed.date.toISOString() : new Date().toISOString();
-        const now = new Date().toISOString();
+        pendingEmails.push({
+          msgId,
+          fromAddr,
+          fromName: parsed.from?.value[0]?.name || fromAddr,
+          subject: parsed.subject || 'No Subject',
+          bodyText: parsed.text || '',
+          bodyHtml: parsed.html || null,
+          receivedAt: parsed.date ? parsed.date.toISOString() : new Date().toISOString(),
+          isRead: message.flags?.has('\\Seen') ? 1 : 0,
+        });
+      }
 
-        // Run LLM logic
-        const analysis = await processEmailWithLlm(subject, bodyText);
+      // Phase 2: Process emails through LLM in parallel pools (concurrency = 5)
+      const LLM_CONCURRENCY = 5;
+
+      type LlmResult = { summary: string; deadline: string | null; hasDeadline: boolean };
+      const llmResults: (LlmResult | null)[] = new Array(pendingEmails.length).fill(null);
+
+      for (let i = 0; i < pendingEmails.length; i += LLM_CONCURRENCY) {
+        const batch = pendingEmails.slice(i, i + LLM_CONCURRENCY);
+        const batchPromises = batch.map(async (email, batchIdx) => {
+          try {
+            const result = await processEmailWithLlm(email.subject, email.bodyText);
+            llmResults[i + batchIdx] = result;
+          } catch {
+            // Per-email failure: use fallback
+            llmResults[i + batchIdx] = {
+              summary: email.bodyText.slice(0, 200),
+              deadline: null,
+              hasDeadline: false,
+            };
+          }
+        });
+        await Promise.all(batchPromises);
+      }
+
+      // Phase 3: Insert results into DB sequentially
+      for (let i = 0; i < pendingEmails.length; i++) {
+        const email = pendingEmails[i];
+        const analysis = llmResults[i];
+        if (!analysis) continue;
+
+        const now = new Date().toISOString();
 
         db.prepare('BEGIN').run();
         try {
           const res = insertEmail.run({
-            message_id: msgId,
-            from_address: fromAddr,
-            from_name: parsed.from?.value[0]?.name || fromAddr,
-            subject: subject,
-            body_text: bodyText,
-            body_html: parsed.html || null,
-            received_at: receivedAt,
-            is_read: message.flags?.has('\\Seen') ? 1 : 0,
+            message_id: email.msgId,
+            from_address: email.fromAddr,
+            from_name: email.fromName,
+            subject: email.subject,
+            body_text: email.bodyText,
+            body_html: email.bodyHtml,
+            received_at: email.receivedAt,
+            is_read: email.isRead,
             summary: analysis.summary,
             has_deadline_mention: analysis.hasDeadline ? 1 : 0,
             last_synced_at: now,
@@ -163,7 +213,7 @@ export async function syncEmails(username: string, appPassword: string): Promise
 
           if (analysis.hasDeadline) {
             insertTodo.run({
-              title: 'Email: ' + subject.slice(0, 100),
+              title: 'Email: ' + email.subject.slice(0, 100),
               description: analysis.summary,
               source_id: Number(res.lastInsertRowid),
               due_date: analysis.deadline || null,

@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { PasswordModal } from '@/components/PasswordModal';
+import { EmptyState } from '@/components/EmptyState';
+import { AlertBanner } from '@/components/AlertBanner';
 import { triggerEmailSync } from './actions';
 import { createSessionAction } from '../dashboard/actions';
 import type { EmailItem } from '@/lib/types';
@@ -8,7 +11,6 @@ import type { EmailItem } from '@/lib/types';
 export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
   const [emails, setEmails] = useState(initialEmails);
   const [isSyncing, startSync] = useTransition();
-  const [masterPassword, setMasterPassword] = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [syncError, setSyncError] = useState('');
   const [syncSuccessMsg, setSyncSuccessMsg] = useState('');
@@ -35,19 +37,17 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
     });
   };
 
-  const submitModal = () => {
+  const submitModal = (password: string) => {
     setSyncError('');
     setSyncSuccessMsg('');
     startSync(async () => {
       const formData = new FormData();
-      formData.append('masterPassword', masterPassword);
+      formData.append('masterPassword', password);
       const authResult = await createSessionAction(formData);
       if (!authResult.success) {
         setSyncError(authResult.error || 'Auth failed');
         return;
       }
-      setMasterPassword(''); // clear from client state
-      // Now actually sync
       const result = await triggerEmailSync();
       if (!result.success) {
         setSyncError(result.error || 'Sync failed');
@@ -78,25 +78,19 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
         </div>
 
         {syncError && (
-          <div className="mb-6 p-4 rounded-lg bg-danger/[0.08] border border-danger/20 text-sm text-red-300">
-            ❌ {syncError}
-          </div>
+          <AlertBanner variant="error" message={syncError} />
         )}
 
         {syncSuccessMsg && (
-          <div className="mb-6 p-4 rounded-lg bg-success/[0.08] border border-success/20 text-sm text-green-300">
-            ✅ {syncSuccessMsg}
-          </div>
+          <AlertBanner variant="success" message={syncSuccessMsg} />
         )}
 
         {emails.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="text-5xl mb-4 opacity-30">✉️</div>
-            <h2 className="text-lg font-semibold mb-2">Inbox Empty</h2>
-            <p className="text-sm text-stone-400 max-w-xs mx-auto mb-6">
-              Click &quot;Sync Gmail&quot; to fetch your institutional emails from the last 14 days.
-            </p>
-          </div>
+          <EmptyState
+            icon="✉️"
+            title="Inbox Empty"
+            description='Click "Sync Gmail" to fetch your institutional emails from the last 14 days.'
+          />
         ) : (
           <div className="grid gap-4">
             {emails.map((email) => (
@@ -125,24 +119,15 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
         )}
 
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-          <div className="bg-stone-900 border border-white/[0.06] rounded-2xl p-8 w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-2">Unlock vault</h2>
-            <p className="text-sm text-stone-400 mb-6">Master password needed for Gmail access.</p>
-            <input
-              type="password"
-              value={masterPassword}
-              onChange={(e) => setMasterPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && submitModal()}
-              autoFocus
-              className="w-full px-4 py-3 rounded-lg bg-stone-950 border border-white/10 text-stone-50 mb-4 focus:border-accent-500 outline-none"
-            />
-            <div className="flex gap-3">
-              <button onClick={() => setShowPasswordModal(false)} className="flex-1 px-4 py-2 bg-stone-700 rounded-lg">Cancel</button>
-              <button onClick={() => { setShowPasswordModal(false); submitModal(); }} className="flex-1 px-4 py-2 bg-accent-600 rounded-lg">Sync</button>
-            </div>
-          </div>
-        </div>
+        <PasswordModal
+          description="Master password needed for Gmail access."
+          submitLabel="Sync"
+          onSubmit={(pw) => {
+            setShowPasswordModal(false);
+            submitModal(pw);
+          }}
+          onCancel={() => setShowPasswordModal(false)}
+        />
       )}
     </>
   );

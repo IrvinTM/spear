@@ -12,9 +12,12 @@
 - Implemented robust server-side session management (`lib/auth-session.ts`) to avoid leaking the master password.
 
 ## Pending ⏳
-- **Update Moodle Scraping**: Switch `lib/moodle/api.ts` away from fragile regex HTML parsing and use `SessionManager.callApi()` to query the JSON Web Services (`core_enrol_get_users_courses`, `mod_assign_get_assignments`, `core_calendar_get_calendar_upcoming_view`).
-- **Extract Components**: Extract modals, cards, and empty states from `client.tsx` files into reusable components in `src/components/`.
-- **Database Migrations**: Add a simple SQL migration system (e.g. `001_initial.sql`) for better local-first schema evolution.
-- **Asynchronous Audio Generation**: Split Piper TTS out of the chat response payload so the bot can respond immediately while audio streams in the background.
-- **Batch Email Processing**: Optimize `lib/email/sync.ts` to process emails with `agy` in batches or parallel pools instead of strictly sequentially.
-- **API Authentication**: Add basic token or session guards to the `api/chat/route.ts` endpoint.
+(none)
+
+## Recently Completed
+- **Update Moodle Scraping**: Switched `lib/moodle/api.ts` from regex HTML parsing to `SessionManager.callApi()` with `core_enrol_get_users_courses`, `mod_assign_get_assignments`, `core_course_get_contents`.
+- **Extract Components**: Extracted `PasswordModal`, `EmptyState`, and `AlertBanner` into `src/components/`. Updated dashboard, email, and materials pages.
+- **Database Migrations**: Added `src/lib/migrations/runner.ts` with `schema_migrations` tracking table. Schema lives in numbered `.sql` files (e.g. `001_initial.sql`).
+- **Asynchronous Audio Generation**: Split TTS into a separate `/api/chat/audio` endpoint. Chat returns text immediately; audio loads in the background.
+- **Batch Email Processing**: Emails now process LLM calls in parallel pools (concurrency 5) instead of sequentially. DB inserts remain sequential.
+- **API Authentication**: Added `getSessionCredentials()` guard to `api/chat/route.ts` — returns 401 if no valid session.
