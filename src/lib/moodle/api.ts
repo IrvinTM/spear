@@ -6,6 +6,7 @@
 
 import { SessionManager, MoodleApiError } from '@/lib/moodle/session';
 import type { MoodleSession } from '@/lib/moodle/session';
+import { logActivity } from '@/lib/activity-log';
 
 /* ------------------------------------------------------------------ */
 /*  API Response Types                                                */
@@ -39,6 +40,12 @@ export interface ExtractedMaterial {
   type: string;
   name: string;
   url: string;
+  sectionId?: number;
+  sectionName?: string;
+  sectionPosition?: number;
+  visible?: number;
+  description?: string;
+  contents: MoodleModuleContent[];
 }
 
 export interface MoodleAttachment {
@@ -195,21 +202,26 @@ async function fetchAssignmentsWs(
       );
     } catch {}
 
-    const sectionNames: string[] = [];
     const materials: ExtractedMaterial[] = [];
 
-    for (const section of sections) {
-      if (section.name) sectionNames.push(section.name);
+    for (let sectionPosition = 0; sectionPosition < sections.length; sectionPosition++) {
+      const section = sections[sectionPosition];
       for (const mod of section.modules) {
         materials.push({
           id: mod.id,
           type: mod.modname,
           name: mod.name,
           url: mod.url || '',
+          sectionId: section.id,
+          sectionName: section.name || `Sección ${sectionPosition + 1}`,
+          sectionPosition,
+          visible: mod.visible,
+          contents: mod.contents || [],
         });
       }
     }
 
+    const sectionNames = sections.map((section) => section.name).filter(Boolean);
     const materialNames = materials.map((m) => m.name);
     const summary = `Secciones: ${sectionNames.join(', ')}\nMateriales: ${materialNames.join(', ')}`;
 
@@ -229,18 +241,26 @@ async function fetchAssignmentsWs(
 /* ------------------------------------------------------------------ */
 
 function getBaseUrl(sm: SessionManager): string {
-  return (sm as any).baseUrl as string;
+  return sm.getBaseUrl();
 }
 
 async function fetchPage(baseUrl: string, path: string, session: MoodleSession): Promise<string> {
-  const res = await fetch(`${baseUrl}${path}`, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0',
-      Cookie: session.moodleSessionCookie,
-    },
-  });
-  if (!res.ok) throw new Error(`Failed to fetch ${path}: ${res.status}`);
-  return res.text();
+  const url = new URL(path, baseUrl).toString();
+  const startedAt = Date.now();
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        Cookie: session.moodleSessionCookie,
+      },
+    });
+    logActivity({ category: 'moodle_api', level: res.ok ? 'info' : 'error', message: 'Fetched Moodle course page', method: 'GET', url, statusCode: res.status, durationMs: Date.now() - startedAt });
+    if (!res.ok) throw new Error(`Failed to fetch ${path}: ${res.status}`);
+    return res.text();
+  } catch (error) {
+    logActivity({ category: 'moodle_api', level: 'error', message: error instanceof Error ? error.message : 'Moodle course page request failed', method: 'GET', url, durationMs: Date.now() - startedAt });
+    throw error;
+  }
 }
 
 async function fetchCoursesScrape(
@@ -279,56 +299,116 @@ async function fetchAssignmentsScrape(
   const result: CourseAssignmentResult = { courses: [] };
 
   for (const courseId of courseIds) {
-    let html: string;
+    let courseHtml: string;
     try {
-      html = await fetchPage(baseUrl, `/course/view.php?id=${courseId}`, session);
+      courseHtml = await fetchPage(baseUrl, `/course/view.php?id=${courseId}`, session);
     } catch {
       continue;
     }
 
-    const assignments: MoodleAssignment[] = [];
-    const assignRegex = /href="[^"]*?\/mod\/assign\/view\.php\?id=(\d+)"[^>]*>.*?<span\s+class="instancename"[^>]*>([^<]+)/g;
-    let match;
-    while ((match = assignRegex.exec(html)) !== null) {
-      assignments.push({
-        id: parseInt(match[1], 10),
-        cmid: parseInt(match[1], 10),
-        course: courseId,
-        name: match[2].replace(' Tarea', '').trim(),
-        intro: '',
-        introformat: 1,
-        duedate: 0,
-        allowsubmissionsfromdate: 0,
-        grade: 10,
-      });
-    }
-
-    const sections: string[] = [];
-    const sectionRegex = /<li\s+class="nav-item[^>]*>\s*<a\s+class="nav-link[^>]*title="([^"]+)"/g;
-    let secMatch;
-    while ((secMatch = sectionRegex.exec(html)) !== null) {
-      sections.push(secMatch[1].trim());
-    }
-
-    const materials: ExtractedMaterial[] = [];
-    const materialsNames: string[] = [];
-    const matRegex = /<a[^>]*href="[^"]*?\/mod\/([^/]+)\/view\.php\?id=(\d+)"[^>]*>([\s\S]*?)<\/a>/g;
-    let matMatch;
-    while ((matMatch = matRegex.exec(html)) !== null) {
-      const type = matMatch[1];
-      const id = parseInt(matMatch[2], 10);
-      const innerHtml = matMatch[3];
-      const nameMatch = /<span\s+class="instancename"[^>]*>([^<]+)/.exec(innerHtml);
-      if (nameMatch) {
-        const name = nameMatch[1].replace(' Tarea', '').trim();
-        materials.push({ id, type, name, url: `${baseUrl}/mod/${type}/view.php?id=${id}` });
-        materialsNames.push(name);
+    // The UES tabbed course format only renders the selected unit/week. The
+    // initial page contains navigation links, so crawl each distinct section
+    // page rather than treating the first page as the complete course.
+    const sectionMap = new Map(extractCourseSectionLinks(courseHtml, baseUrl, courseId).map((section) => [section.number, section.name]));
+    const pages = [{ html: courseHtml, sectionName: 'Contenido del curso', sectionPosition: 0 }];
+    const queuedSections = [...sectionMap.keys()];
+    const fetchedSections = new Set<number>();
+    for (let index = 0; index < queuedSections.length; index++) {
+      const number = queuedSections[index];
+      if (fetchedSections.has(number)) continue;
+      fetchedSections.add(number);
+      try {
+        const html = await fetchPage(baseUrl, `/course/view.php?id=${courseId}&section=${number}`, session);
+        pages.push({
+          html,
+          sectionName: sectionMap.get(number) || `Sección ${number}`,
+          sectionPosition: number,
+        });
+        for (const discovered of extractCourseSectionLinks(html, baseUrl, courseId)) {
+          if (!sectionMap.has(discovered.number)) {
+            sectionMap.set(discovered.number, discovered.name);
+            queuedSections.push(discovered.number);
+          }
+        }
+      } catch (error) {
+        console.warn(`[Moodle] Unable to fetch course ${courseId} section ${number}`, error);
       }
     }
 
-    const summary = `Secciones: ${sections.join(', ')}\nMateriales: ${materialsNames.join(', ')}`;
+    const assignments: MoodleAssignment[] = [];
+    const materials: ExtractedMaterial[] = [];
+    const seenAssignments = new Set<number>();
+    const seenMaterials = new Set<number>();
+
+    for (const page of pages) {
+      const assignRegex = /href="[^"]*?\/mod\/assign\/view\.php\?id=(\d+)[^"]*"[^>]*>[\s\S]*?<span\s+class="instancename"[^>]*>([^<]+)/g;
+      let assignmentMatch;
+      while ((assignmentMatch = assignRegex.exec(page.html)) !== null) {
+        const id = parseInt(assignmentMatch[1], 10);
+        if (seenAssignments.has(id)) continue;
+        seenAssignments.add(id);
+        assignments.push({
+          id,
+          cmid: id,
+          course: courseId,
+          name: assignmentMatch[2].replace(' Tarea', '').trim(),
+          intro: '',
+          introformat: 1,
+          duedate: 0,
+          allowsubmissionsfromdate: 0,
+          grade: 10,
+        });
+      }
+
+      const matRegex = /<a[^>]*href="([^"]*?\/mod\/([^/]+)\/view\.php\?id=(\d+)[^"]*)"[^>]*>([\s\S]*?)<\/a>/g;
+      let materialMatch;
+      while ((materialMatch = matRegex.exec(page.html)) !== null) {
+        const type = materialMatch[2];
+        const id = parseInt(materialMatch[3], 10);
+        const nameMatch = /<span\s+class="instancename"[^>]*>([^<]+)/.exec(materialMatch[4]);
+        if (!nameMatch || seenMaterials.has(id)) continue;
+        seenMaterials.add(id);
+        materials.push({
+          id,
+          type,
+          name: nameMatch[1].replace(' Tarea', '').trim(),
+          url: new URL(materialMatch[1].replace(/&amp;/g, '&'), baseUrl).toString(),
+          sectionName: page.sectionName,
+          sectionPosition: page.sectionPosition,
+          visible: 1,
+          contents: [],
+        });
+      }
+    }
+
+    const summary = `Secciones: ${[...sectionMap.entries()].sort(([a], [b]) => a - b).map(([, name]) => name).join(', ')}\nMateriales: ${materials.map((material) => material.name).join(', ')}`;
     result.courses.push({ id: courseId, assignments, materials, summary });
   }
 
   return result;
+}
+
+function extractCourseSectionLinks(
+  html: string,
+  baseUrl: string,
+  courseId: number,
+): Array<{ number: number; name: string }> {
+  const sections = new Map<number, string>();
+  const linkRegex = /<a\b[^>]*href="([^"]*course\/view\.php\?[^"#]*\bsection=(\d+)[^"]*)"[^>]*?(?:title="([^"]*)")?[^>]*>([\s\S]*?)<\/a>/g;
+  let match;
+  while ((match = linkRegex.exec(html)) !== null) {
+    const url = new URL(match[1].replace(/&amp;/g, '&'), baseUrl);
+    if (url.searchParams.get('id') !== String(courseId)) continue;
+    const number = parseInt(match[2], 10);
+    const title = match[3] || stripHtml(match[4]);
+    const name = title.replace(/\s*:\s*Ocultado a los estudiantes\s*$/i, '').trim() || `Sección ${number}`;
+    sections.set(number, name);
+  }
+  return [...sections.entries()]
+    .map(([number, name]) => ({ number, name }))
+    .sort((a, b) => a.number - b.number);
+}
+
+function stripHtml(value: string): string {
+  return value.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 }

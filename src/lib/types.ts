@@ -32,11 +32,17 @@ export interface EmailItem {
 
 export interface MaterialItem {
   id: number;
+  courseId?: number;
   courseName: string;
   name: string;
   type: string;
   url: string | null;
   filename: string | null;
+  sectionName?: string | null;
+  localPath?: string | null;
+  fileStatus?: string | null;
+  fileSize?: number | null;
+  fileError?: string | null;
 }
 
 export interface CourseMaterialGroup {

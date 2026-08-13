@@ -37,15 +37,17 @@ export class LlmTimeoutError extends LlmError {
  * Configuration options for LLM generation.
  */
 export interface LlmOptions {
-  /** Model identifier (default: gemini-3.6-flash-low) */
+  /** Model identifier (default: flash) */
   model?: string;
   /** Timeout in milliseconds (default: 30000) */
   timeout?: number;
   /** Reasoning effort level */
   effort?: 'low' | 'medium' | 'high';
+  /** Local directories the agent may inspect as reference material. */
+  additionalDirectories?: string[];
 }
 
-const DEFAULT_MODEL = 'gemini-3.6-flash-low';
+const DEFAULT_MODEL = 'gemini-3.6-flash-medium';
 const DEFAULT_TIMEOUT = 30_000;
 
 /** Cached path to the agy binary. null = not yet checked, false = not found. */
@@ -107,12 +109,14 @@ function buildArgs(
   timeoutMs: number,
   effort?: 'low' | 'medium' | 'high',
   jsonSchema?: string,
+  additionalDirectories?: string[],
 ): string[] {
   const timeoutStr = `${Math.ceil(timeoutMs / 1000)}s`;
   const args = [
     '--output-format', format,
     '--model', model,
     '--print-timeout', timeoutStr,
+    '--dangerously-skip-permissions',
   ];
 
   if (effort) {
@@ -120,6 +124,9 @@ function buildArgs(
   }
   if (jsonSchema) {
     args.push('--json-schema', jsonSchema);
+  }
+  for (const directory of additionalDirectories || []) {
+    args.push('--add-dir', directory);
   }
 
   return args;
@@ -136,8 +143,10 @@ async function executeAgy(
   const agyPath = await requireAgy();
 
   return new Promise((resolve, reject) => {
+    // Pass the prompt via -p argument
+    args.push('-p', prompt);
     const child = spawn(agyPath, args, {
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
 
     let stdoutData = '';
@@ -170,9 +179,7 @@ async function executeAgy(
       resolve(stdoutData);
     });
 
-    // Pipe the prompt via stdin (safer for complex/long prompts)
-    child.stdin.write(prompt);
-    child.stdin.end();
+
   });
 }
 
@@ -190,7 +197,7 @@ export async function generateText(
   const model = options?.model ?? DEFAULT_MODEL;
   const timeoutMs = options?.timeout ?? DEFAULT_TIMEOUT;
 
-  const args = buildArgs('text', model, timeoutMs, options?.effort);
+  const args = buildArgs('text', model, timeoutMs, options?.effort, undefined, options?.additionalDirectories);
   return executeAgy(prompt, args, timeoutMs);
 }
 
@@ -210,7 +217,7 @@ export async function generateJson<T>(
   const model = options?.model ?? DEFAULT_MODEL;
   const timeoutMs = options?.timeout ?? DEFAULT_TIMEOUT;
 
-  const args = buildArgs('json', model, timeoutMs, options?.effort, schema);
+  const args = buildArgs('json', model, timeoutMs, options?.effort, schema, options?.additionalDirectories);
   const stdout = await executeAgy(prompt, args, timeoutMs);
 
   try {
@@ -237,10 +244,11 @@ export async function* streamText(
   const model = options?.model ?? DEFAULT_MODEL;
   const timeoutMs = options?.timeout ?? DEFAULT_TIMEOUT;
 
-  const args = buildArgs('stream-json', model, timeoutMs, options?.effort);
+  const args = buildArgs('stream-json', model, timeoutMs, options?.effort, undefined, options?.additionalDirectories);
 
+  args.push('-p', prompt);
   const child = spawn(agyPath, args, {
-    stdio: ['pipe', 'pipe', 'pipe'],
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
 
   let hasTimedOut = false;
@@ -257,8 +265,7 @@ export async function* streamText(
   let buffer = '';
 
   try {
-    child.stdin.write(prompt);
-    child.stdin.end();
+
 
     for await (const chunk of child.stdout) {
       buffer += chunk.toString();

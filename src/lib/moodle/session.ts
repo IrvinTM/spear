@@ -31,6 +31,12 @@ export interface MoodleSession {
   createdAt: Date;
 }
 
+export interface MoodleDownload {
+  bytes: Buffer;
+  contentType: string | null;
+  contentLength: number | null;
+}
+
 const SESSION_MAX_AGE_MS = 90 * 60 * 1000; // 90 minutes (conservative; Moodle timeout is 2h)
 
 const DEFAULT_USER_AGENT =
@@ -79,6 +85,72 @@ export class SessionManager {
   /** Returns the current cached session. */
   getSession(): MoodleSession | null {
     return this.currentSession;
+  }
+
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
+  /** Fetches an authenticated Moodle URL without following login redirects. */
+  async download(
+    session: MoodleSession,
+    url: string,
+    maxBytes: number,
+  ): Promise<MoodleDownload> {
+    if (isSessionExpired(session)) throw new MoodleSessionExpiredError();
+
+    const { logActivity } = await import('@/lib/activity-log');
+    const startedAt = Date.now();
+    let currentUrl = url;
+    let response: Response | undefined;
+    for (let redirects = 0; redirects < 5; redirects++) {
+      try {
+        response = await fetch(currentUrl, {
+          headers: { 'User-Agent': DEFAULT_USER_AGENT, Cookie: session.moodleSessionCookie },
+          redirect: 'manual',
+        });
+      } catch (error) {
+        logActivity({ category: 'file_download', level: 'error', message: error instanceof Error ? error.message : 'Download request failed', method: 'GET', url: currentUrl, durationMs: Date.now() - startedAt });
+        throw error;
+      }
+      if (response.status < 300 || response.status >= 400) break;
+      const location = response.headers.get('location') || '';
+      if (location.includes('/login/')) throw new MoodleSessionExpiredError();
+      if (!location) throw new MoodleApiError(`Download redirect has no location: ${response.status}`);
+      const nextUrl = new URL(location, currentUrl);
+      if (nextUrl.origin !== new URL(this.baseUrl).origin) {
+        throw new MoodleApiError('Download redirected outside Moodle');
+      }
+      currentUrl = nextUrl.toString();
+    }
+    if (!response || (response.status >= 300 && response.status < 400)) {
+      logActivity({ category: 'file_download', level: 'error', message: 'Download exceeded redirect limit', method: 'GET', url, durationMs: Date.now() - startedAt });
+      throw new MoodleApiError('Download exceeded redirect limit');
+    }
+    if (!response.ok) {
+      logActivity({ category: 'file_download', level: 'error', message: `Download HTTP Error: ${response.status}`, method: 'GET', url: currentUrl, statusCode: response.status, durationMs: Date.now() - startedAt });
+      throw new MoodleApiError(`Download HTTP Error: ${response.status}`);
+    }
+
+    const contentLength = Number(response.headers.get('content-length'));
+    if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+      logActivity({ category: 'file_download', level: 'warning', message: 'Download skipped: file exceeds size limit', method: 'GET', url: currentUrl, statusCode: response.status, durationMs: Date.now() - startedAt, details: { contentLength, maxBytes } });
+      throw new MoodleApiError(`File exceeds configured limit of ${maxBytes} bytes`);
+    }
+
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (bytes.length > maxBytes) {
+      logActivity({ category: 'file_download', level: 'warning', message: 'Download skipped: file exceeds size limit', method: 'GET', url: currentUrl, statusCode: response.status, durationMs: Date.now() - startedAt, details: { contentLength: bytes.length, maxBytes } });
+      throw new MoodleApiError(`File exceeds configured limit of ${maxBytes} bytes`);
+    }
+
+    logActivity({ category: 'file_download', message: 'Downloaded Moodle file', method: 'GET', url: currentUrl, statusCode: response.status, durationMs: Date.now() - startedAt, details: { bytes: bytes.length, contentType: response.headers.get('content-type') } });
+
+    return {
+      bytes,
+      contentType: response.headers.get('content-type'),
+      contentLength: Number.isFinite(contentLength) ? contentLength : null,
+    };
   }
 
   /** Clears the current cached session. */
@@ -227,17 +299,26 @@ export class SessionManager {
     const apiUrl = `${this.baseUrl}/lib/ajax/service.php?sesskey=${session.sesskey}&info=${methodName}`;
     const payload = [{ index: 0, methodname: methodName, args }];
 
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'User-Agent': DEFAULT_USER_AGENT,
-        'Content-Type': 'application/json',
-        Cookie: session.moodleSessionCookie,
-        Accept: 'application/json, text/javascript, */*; q=0.01',
-      },
-      body: JSON.stringify(payload),
-      redirect: 'manual',
-    });
+    const { logActivity } = await import('@/lib/activity-log');
+    const startedAt = Date.now();
+    let response: Response;
+    try {
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'User-Agent': DEFAULT_USER_AGENT,
+          'Content-Type': 'application/json',
+          Cookie: session.moodleSessionCookie,
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+        },
+        body: JSON.stringify(payload),
+        redirect: 'manual',
+      });
+    } catch (error) {
+      logActivity({ category: 'moodle_api', level: 'error', message: error instanceof Error ? error.message : 'Moodle API request failed', method: 'POST', url: apiUrl, durationMs: Date.now() - startedAt, details: { methodName } });
+      throw error;
+    }
+    logActivity({ category: 'moodle_api', level: response.ok ? 'info' : 'error', message: `Moodle API: ${methodName}`, method: 'POST', url: apiUrl, statusCode: response.status, durationMs: Date.now() - startedAt });
 
     // Detect session expiration via redirect to login
     if (response.status >= 300 && response.status < 400) {

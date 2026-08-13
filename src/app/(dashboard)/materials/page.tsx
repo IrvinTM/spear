@@ -49,16 +49,26 @@ export default async function MaterialsPage() {
                 ) : (
                   <ul className="flex flex-col gap-2">
                     {group.materials.map((m) => (
-                      <li key={m.id} className="flex items-center gap-3 text-sm">
+                      <li key={`${m.id}-${m.filename || 'module'}`} className="flex items-center gap-3 text-sm">
                         <span className="text-stone-400">{m.type === 'url' ? '🔗' : '📄'}</span>
-                        <a
-                          href={m.url || '#'}
-                          className="text-accent-400 hover:underline"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {m.name}
-                        </a>
+                        <div className="min-w-0 flex-1">
+                          <a
+                            href={m.url || '#'}
+                            className="text-accent-400 hover:underline"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {m.filename || m.name}
+                          </a>
+                          <p className="text-xs text-stone-500 truncate">
+                            {[m.sectionName, m.filename ? m.name : null].filter(Boolean).join(' · ')}
+                          </p>
+                        </div>
+                        {m.fileStatus && (
+                          <span className={`text-xs ${m.fileStatus === 'downloaded' ? 'text-success' : m.fileStatus === 'failed' ? 'text-danger' : 'text-stone-500'}`} title={m.fileError || undefined}>
+                            {m.fileStatus === 'downloaded' ? 'Saved locally' : m.fileStatus === 'skipped' ? 'Skipped' : 'Unavailable'}
+                          </span>
+                        )}
                       </li>
                     ))}
                   </ul>

@@ -132,6 +132,8 @@ export async function triggerMoodleSync(
     }
     
     const { syncMoodle } = await import('@/lib/moodle/sync');
+    const { initSchema } = await import('@/lib/db');
+    initSchema();
     const result = await syncMoodle(creds.uesUsername, creds.uesPassword);
 
     return {

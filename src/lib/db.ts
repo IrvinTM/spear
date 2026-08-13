@@ -81,6 +81,37 @@ export function getGlobalContext() {
   todos.forEach(t => {
     contextText += `- [${t.status}] ${t.title} (Para: ${t.due_date || 'Sin fecha'}) [Origen: ${t.source_type}]\n`;
   });
+
+  const materials = db.prepare(`
+    SELECT c.fullname as courseName, COALESCE(s.name, m.section_name, 'Contenido') as sectionName,
+      COALESCE(mf.original_filename, m.name) as materialName, mf.status
+    FROM materials m
+    JOIN courses c ON c.id = m.course_id
+    LEFT JOIN course_sections s ON s.id = m.section_id
+    LEFT JOIN material_files mf ON mf.material_id = m.id
+    ORDER BY c.fullname, sectionName, materialName
+    LIMIT 100
+  `).all() as { courseName: string; sectionName: string; materialName: string; status: string | null }[];
+  contextText += `\n### Materiales guardados:\n`;
+  if (materials.length === 0) contextText += `No hay materiales descargados todavía.\n`;
+  materials.forEach((material) => {
+    contextText += `- ${material.courseName} / ${material.sectionName}: ${material.materialName}${material.status ? ` (${material.status})` : ''}\n`;
+  });
   
   return contextText;
+}
+
+/** Returns a course only when the message contains one unambiguous course name or code. */
+export function findCourseForMessage(message: string): { id: number; fullname: string } | null {
+  const normalized = message.toLocaleLowerCase();
+  const courses = getDb().prepare('SELECT id, fullname, shortname FROM courses WHERE visible = 1').all() as {
+    id: number; fullname: string; shortname: string;
+  }[];
+  const matches = courses.filter((course) => {
+    const fullname = course.fullname.toLocaleLowerCase();
+    const shortname = course.shortname.toLocaleLowerCase();
+    return (fullname.length >= 4 && normalized.includes(fullname)) ||
+      (shortname.length >= 3 && normalized.includes(shortname));
+  });
+  return matches.length === 1 ? { id: matches[0].id, fullname: matches[0].fullname } : null;
 }

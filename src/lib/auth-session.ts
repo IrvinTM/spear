@@ -3,8 +3,12 @@ import { randomBytes } from 'node:crypto';
 import type { VaultCredentials } from '@/lib/vault';
 
 // In-memory cache for decrypted credentials. 
-// Will be lost on server restart, requiring the user to unlock the vault again.
-const sessionCache = new Map<string, { creds: VaultCredentials, expiresAt: number }>();
+// Use globalThis to persist across Next.js hot-reloads and bundle boundaries in development.
+const globalAny = global as any;
+if (!globalAny.sessionCache) {
+  globalAny.sessionCache = new Map<string, { creds: VaultCredentials, expiresAt: number }>();
+}
+const sessionCache = globalAny.sessionCache;
 const SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
 export async function createSession(creds: VaultCredentials) {

@@ -41,6 +41,10 @@ function generatePiperAudio(
     child.stdout.on('data', (chunk) => chunks.push(chunk));
     child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
 
+    child.on('error', (err) => {
+      reject(err);
+    });
+
     child.on('close', (code) => {
       if (code !== 0) {
         reject(new Error(`Piper exited with code ${code}: ${stderr}`));

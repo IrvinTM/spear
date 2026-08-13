@@ -28,14 +28,15 @@ export function CopilotChat() {
 
     const userMsg = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    const newMessages: Message[] = [...messages, { role: 'user', content: userMsg }];
+    setMessages(newMessages);
     setIsLoading(true);
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsg }),
+        body: JSON.stringify({ messages: newMessages }),
       });
       const data = await res.json();
 

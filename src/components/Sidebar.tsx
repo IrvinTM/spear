@@ -7,6 +7,7 @@ const navItems = [
   { href: '/', label: 'Todos', icon: '📋' },
   { href: '/materials', label: 'Materials', icon: '📚' },
   { href: '/email', label: 'Email', icon: '✉️' },
+  { href: '/logs', label: 'Logs', icon: '📜' },
 ];
 
 const activeClass =
