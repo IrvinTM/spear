@@ -59,59 +59,38 @@ function generatePiperAudio(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Google Cloud Text-to-Speech                                       */
+/*  Google Cloud Text-to-Speech (v1beta1 — Gemini TTS)                */
 /* ------------------------------------------------------------------ */
-
-async function getGoogleAccessToken(): Promise<string> {
-  const { GoogleAuth } = await import('google-auth-library');
-  const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
-  const client = await auth.getClient();
-  const token = await client.getAccessToken();
-  if (!token.token) throw new Error('Failed to obtain Google access token');
-  return token.token;
-}
 
 async function generateGoogleAudio(
   text: string,
-  config: { apiKey: string; voice: string; languageCode: string },
+  config: { apiKey: string; voice: string; languageCode: string; modelName: string; prompt: string; speakingRate: number; pitch: number },
 ): Promise<{ buffer: Buffer; contentType: string }> {
-  const endpoint = 'https://texttospeech.googleapis.com/v1/text:synthesize';
-  const apiKey = process.env.GOOGLE_TTS_API_KEY || config.apiKey;
+  const { v1beta1, protos } = await import('@google-cloud/text-to-speech');
 
-  const body = {
-    input: { text },
+  const client = new v1beta1.TextToSpeechClient();
+
+  const [response] = await client.synthesizeSpeech({
+    input: {
+      text,
+      prompt: config.prompt || undefined,
+    },
     voice: {
       languageCode: process.env.GOOGLE_TTS_LANGUAGE || config.languageCode,
       name: process.env.GOOGLE_TTS_VOICE || config.voice,
+      modelName: config.modelName,
     },
     audioConfig: {
-      audioEncoding: 'MP3',
+      audioEncoding: protos.google.cloud.texttospeech.v1beta1.AudioEncoding.LINEAR16,
+      speakingRate: config.speakingRate,
+      pitch: config.pitch,
     },
-  };
-
-  let url: string;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-
-  if (apiKey) {
-    url = `${endpoint}?key=${apiKey}`;
-  } else {
-    url = endpoint;
-    const token = await getGoogleAccessToken();
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Google TTS API error ${res.status}: ${err}`);
+  if (!response.audioContent) {
+    throw new Error('Google TTS returned empty audio content');
   }
 
-  const data = await res.json() as { audioContent: string };
-  const buffer = Buffer.from(data.audioContent, 'base64');
-  return { buffer, contentType: 'audio/mpeg' };
+  const buffer = Buffer.from(response.audioContent as Uint8Array);
+  return { buffer, contentType: 'audio/wav' };
 }

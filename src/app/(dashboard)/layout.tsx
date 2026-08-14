@@ -1,11 +1,12 @@
 import { Sidebar } from '@/components/Sidebar';
+import { DashboardShell } from '@/components/DashboardShell';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-stone-950">
       <Sidebar />
       <main className="ml-60 max-md:ml-0 min-h-screen p-8 max-md:p-4">
-        {children}
+        <DashboardShell>{children}</DashboardShell>
       </main>
     </div>
   );

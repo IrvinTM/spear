@@ -1,7 +1,7 @@
 import { getDb } from '@/lib/db';
 
 export type ActivityLogInput = {
-  category: 'moodle_api' | 'file_download' | 'sync' | 'chat';
+  category: 'moodle_api' | 'file_download' | 'sync' | 'chat' | 'agy_call';
   level?: 'info' | 'warning' | 'error';
   message: string;
   method?: string;

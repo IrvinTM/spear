@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { isVaultInitialized } from '@/lib/vault';
 import { getActivityLogs } from './actions';
+import { LiveToggle } from './client';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,9 +17,12 @@ export default async function LogsPage() {
 
   return (
     <>
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight mb-1">Activity logs</h1>
-        <p className="text-sm text-stone-400">Recent local Moodle, download, sync, and AI request activity. URLs exclude query strings.</p>
+      <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight mb-1">Activity logs</h1>
+          <p className="text-sm text-stone-400">Recent local Moodle, download, sync, and AI request activity.</p>
+        </div>
+        <LiveToggle />
       </div>
 
       {logs.length === 0 ? (

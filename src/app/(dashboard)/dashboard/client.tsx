@@ -1,11 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { CopilotChat } from '@/components/CopilotChat';
+import { useState, useEffect, useTransition } from 'react';
 import { PasswordModal } from '@/components/PasswordModal';
-import { EmptyState } from '@/components/EmptyState';
 import { AlertBanner } from '@/components/AlertBanner';
-import { SyncBriefing } from '@/components/SyncBriefing';
 import { CharacterViewer, CharacterPose } from '@/components/CharacterViewer';
 import {
   triggerMoodleSync,
@@ -95,6 +92,15 @@ export function DashboardClient({
   const [syncError, setSyncError] = useState('');
   const [characterPose, setCharacterPose] = useState<CharacterPose>('idle');
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const pose = (e as CustomEvent).detail as CharacterPose;
+      setCharacterPose(pose);
+    };
+    window.addEventListener('character-pose', handler);
+    return () => window.removeEventListener('character-pose', handler);
+  }, []);
+
   const handleSync = () => {
     doSync();
   };
@@ -147,193 +153,112 @@ export function DashboardClient({
     updateTodoStatus(todoId, status);
   };
 
+  const activeTodos = todos.filter((t) => t.status !== 'done');
+  const [todosExpanded, setTodosExpanded] = useState(false);
+
   return (
     <>
-      {/* Header */}
-      <div className="mb-8 flex items-start justify-between flex-wrap gap-4 pointer-events-none">
-          <div className="pointer-events-auto">
-            <h1 className="text-2xl font-semibold tracking-tight mb-1">Todos</h1>
-            <p className="text-sm text-stone-400 mt-1">
-              {todos.filter((t) => t.status === 'done').length} / {todos.length} completed
-            </p>
-          </div>
+      {/* Character — full screen, center stage */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <CharacterViewer
+          characterUrl={`/api/characters/${activeCharacter}`}
+          animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
+          talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
+          pose={characterPose}
+          className="w-full h-full"
+        />
+      </div>
 
-          <div className="flex items-center gap-3 pointer-events-auto">
-            {/* Sync status badge */}
-            <div className="flex items-center gap-2 text-xs text-stone-500">
-              {syncStatus.status !== 'never' && (
-                <>
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      syncStatus.status === 'success'
-                        ? 'bg-success status-glow-success'
-                        : syncStatus.status === 'failed'
-                        ? 'bg-danger status-glow-danger'
-                        : 'bg-warning status-glow-warning'
-                    }`}
-                  />
-                  <span>Synced {formatRelativeDate(syncStatus.lastSync)}</span>
-                </>
-              )}
-            </div>
-
-            <button
-              onClick={handleSync}
-              disabled={isSyncing}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-600 text-white text-sm font-medium border border-accent-700 shadow-sm hover:bg-accent-500 hover:shadow-glow hover:-translate-y-px active:bg-accent-700 active:translate-y-0 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {isSyncing ? (
-                <>
-                  <span className="spinner spinner--sm" />
-                  Syncing…
-                </>
-              ) : (
-                <>🔄 Sync Moodle</>
-              )}
-            </button>
-          </div>
+      {/* Sync error — top overlay */}
+      {syncError && (
+        <div className="relative z-10 mb-4">
+          <AlertBanner variant="error" title="Sync Failed" message={syncError} />
         </div>
+      )}
 
-        {/* Sync error */}
-        {syncError && (
-          <div className="pointer-events-auto">
-            <AlertBanner variant="error" title="Sync Failed" message={syncError} />
-          </div>
-        )}
-        
-        {/* Full-screen Character Background */}
-        <div className="fixed inset-0 z-0 opacity-40">
-          <CharacterViewer 
-            characterUrl={`/api/characters/${activeCharacter}`}
-            animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
-            talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
-            pose={characterPose}
-            className="w-full h-full"
-          />
-        </div>
-
-        {/* Content Overlay */}
-        <div className="relative z-10 grid grid-cols-[300px_1fr_400px] max-lg:grid-cols-1 gap-6 mb-8 mt-4 pointer-events-none">
-          {/* Left: Briefing + Stats */}
-          <div className="flex flex-col gap-4 max-lg:order-2 pointer-events-auto">
-            <SyncBriefing onPlayStateChange={(playing) => setCharacterPose(playing ? 'speaking' : 'idle')} />
-            
-            {/* Sync stats (when data exists) */}
-            {syncStatus.status !== 'never' && (
-              <div className="flex flex-col gap-4">
-                {[
-                  { label: 'Courses', value: syncStatus.coursesCount, icon: '📖' },
-                  { label: 'Assignments', value: syncStatus.assignmentsCount, icon: '📝' },
-                  { label: 'Active Todos', value: syncStatus.todosCount, icon: '✅' },
-                ].map(({ label, value, icon }) => (
-                  <div
-                    key={label}
-                    className="bg-stone-900 border border-white/[0.06] rounded-xl p-5 shadow-sm flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-2 text-stone-400 text-sm font-medium">
-                      <span>{icon}</span>
-                      {label}
-                    </div>
-                    <div className="text-xl font-semibold tracking-tight">{value}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Center: Empty Stage for character to show through */}
-          <div className="relative min-h-[400px] max-lg:hidden" />
-          
-          {/* Right: Copilot Chat */}
-          <div className="flex flex-col max-lg:order-3 pointer-events-auto">
-            <CopilotChat />
-          </div>
-        </div>
-
-        {/* Todo list */}
-        <div className="pointer-events-none">
-          {todos.length === 0 ? (
-            <div className="pointer-events-auto">
-              <EmptyState
-                icon="📋"
-                title="No tasks yet"
-                description='Click "Sync Moodle" to pull your courses and assignments. Todos will be created automatically from upcoming due dates.'
-              />
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2 pointer-events-auto">
-              {todos.map((todo, i) => {
+      {/* Bottom bar — todos + sync, pinned to bottom */}
+      <div className="fixed bottom-0 left-60 right-0 z-20 max-md:left-0 pointer-events-none">
+        {/* Expandable todo list */}
+        {todosExpanded && activeTodos.length > 0 && (
+          <div className="pointer-events-auto mx-6 mb-2 max-h-[50vh] overflow-y-auto rounded-xl bg-stone-950/90 backdrop-blur-sm border border-white/[0.06] shadow-2xl">
+            <div className="flex flex-col divide-y divide-white/[0.04]">
+              {activeTodos.map((todo) => {
                 const due = formatDueDate(todo.dueDate);
                 const cfg = statusConfig[todo.status as keyof typeof statusConfig] || statusConfig.pending;
-
                 return (
-                  <div
-                    key={todo.id}
-                    className="group bg-stone-900 border border-white/[0.06] rounded-xl p-5 shadow-sm hover:border-white/10 transition-all animate-fade-in"
-                    style={{ animationDelay: `${i * 50}ms` }}
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Status toggle */}
-                      <button
-                        onClick={() =>
-                          handleStatusChange(
-                            todo.id,
-                            todo.status === 'pending' ? 'in_progress' : 'done',
-                          )
-                        }
-                        className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:scale-110 ${
-                          todo.status === 'in_progress'
-                            ? 'border-accent-400 bg-accent-400/20'
-                            : 'border-stone-600 hover:border-stone-400'
-                        }`}
-                        title={todo.status === 'pending' ? 'Start working' : 'Mark as done'}
-                      >
-                        {todo.status === 'in_progress' && (
-                          <span className="w-2 h-2 rounded-full bg-accent-400" />
-                        )}
-                      </button>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-medium text-sm leading-snug">{todo.title}</h3>
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${cfg.bg} ${cfg.text}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                            {cfg.label}
-                          </span>
-                        </div>
-
-                        {todo.courseName && (
-                          <p className="text-xs text-stone-500 mt-1">{todo.courseName}</p>
-                        )}
-
-                        {todo.description && (
-                          <p className="text-xs text-stone-400 mt-2 line-clamp-2 leading-relaxed">
-                            {todo.description}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Due date */}
-                      <div className={`text-right shrink-0 ${urgencyColors[due.urgency]}`}>
-                        <p className="text-xs font-medium">{due.label}</p>
-                        {due.urgency === 'overdue' && (
-                          <p className="text-[10px] mt-0.5 opacity-75">Overdue</p>
-                        )}
-                      </div>
+                  <div key={todo.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors">
+                    <button
+                      onClick={() => handleStatusChange(todo.id, todo.status === 'pending' ? 'in_progress' : 'done')}
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 cursor-pointer hover:scale-110 transition-all ${
+                        todo.status === 'in_progress' ? 'border-accent-400 bg-accent-400/20' : 'border-stone-600 hover:border-stone-400'
+                      }`}
+                    >
+                      {todo.status === 'in_progress' && <span className="w-1.5 h-1.5 rounded-full bg-accent-400" />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-stone-200 truncate">{todo.title}</p>
+                      {todo.courseName && <p className="text-xs text-stone-500 truncate">{todo.courseName}</p>}
                     </div>
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium shrink-0 ${cfg.bg} ${cfg.text}`}>
+                      <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
+                      {cfg.label}
+                    </span>
+                    <span className={`text-xs shrink-0 ${urgencyColors[due.urgency]}`}>{due.label}</span>
                   </div>
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Compact status bar */}
+        <div className="pointer-events-auto mx-6 mb-6 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-stone-950/80 backdrop-blur-sm border border-white/[0.06] shadow-lg">
+          {/* Sync status dot + text */}
+          <div className="flex items-center gap-2 text-xs text-stone-500">
+            {syncStatus.status !== 'never' && (
+              <span className={`w-2 h-2 rounded-full shrink-0 ${
+                syncStatus.status === 'success' ? 'bg-success' : syncStatus.status === 'failed' ? 'bg-danger' : 'bg-warning'
+              }`} />
+            )}
+            <span suppressHydrationWarning className="hidden sm:inline">
+              {syncStatus.status === 'never' ? 'Not synced' : `Synced ${formatRelativeDate(syncStatus.lastSync)}`}
+            </span>
+          </div>
+
+          {/* Stats chips */}
+          {syncStatus.status !== 'never' && (
+            <div className="hidden md:flex items-center gap-2 text-xs text-stone-500">
+              <span>{syncStatus.coursesCount} courses</span>
+              <span className="text-stone-700">/</span>
+              <span>{syncStatus.assignmentsCount} assignments</span>
+            </div>
           )}
+
+          {/* Todos toggle */}
+          <button
+            onClick={() => setTodosExpanded((v) => !v)}
+            className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-200 transition-colors cursor-pointer ml-auto"
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${activeTodos.length > 0 ? 'bg-accent-400' : 'bg-stone-600'}`} />
+            {activeTodos.length} todo{activeTodos.length !== 1 ? 's' : ''}
+            <span className="text-stone-600">{todosExpanded ? '▼' : '▲'}</span>
+          </button>
+
+          {/* Sync button */}
+          <button
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-600 text-white text-xs font-medium border border-accent-700 hover:bg-accent-500 active:bg-accent-700 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          >
+            {isSyncing ? <><span className="spinner spinner--sm" /> Syncing</> : 'Sync'}
+          </button>
         </div>
+      </div>
+
       {showPasswordModal && (
         <PasswordModal
           description="Enter your master password to sync with Moodle."
-          onSubmit={(pw) => {
-            setShowPasswordModal(false);
-            submitModal(pw);
-          }}
+          onSubmit={(pw) => { setShowPasswordModal(false); submitModal(pw); }}
           onCancel={() => setShowPasswordModal(false)}
         />
       )}

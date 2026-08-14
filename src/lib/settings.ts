@@ -13,6 +13,10 @@ export interface AppSettings {
       apiKey: string;
       voice: string;
       languageCode: string;
+      modelName: string;
+      prompt: string;
+      speakingRate: number;
+      pitch: number;
     };
   };
   character: string;
@@ -29,13 +33,17 @@ const DEFAULTS: AppSettings = {
     },
     google: {
       apiKey: '',
-      voice: 'es-US-Studio-B',
-      languageCode: 'es-US',
+      voice: 'Sulafat',
+      languageCode: 'es-419',
+      modelName: 'gemini-3.1-flash-tts-preview',
+      prompt: 'Read aloud in a warm, welcoming tone.',
+      speakingRate: 1,
+      pitch: 0,
     },
   },
   character: 'default.vrm',
   animation: 'idle_loop.vrma',
-  talkingAnimation: 'procedural',
+  talkingAnimation: 'talking.vrma',
 };
 
 function getSettingsPath(): string {

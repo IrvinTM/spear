@@ -1,5 +1,6 @@
 import { spawn, exec } from 'node:child_process';
 import { promisify } from 'node:util';
+import { logActivity } from '@/lib/activity-log';
 
 /**
  * Base error class for all LLM-related errors.
@@ -141,9 +142,13 @@ async function executeAgy(
   timeoutMs: number,
 ): Promise<string> {
   const agyPath = await requireAgy();
+  const model = args[args.indexOf('--model') + 1] || 'unknown';
+  const format = args[args.indexOf('--output-format') + 1] || 'text';
+  const startedAt = Date.now();
+
+  logActivity({ category: 'agy_call', message: `Spawning agy (${model}, ${format})`, details: { model, format } });
 
   return new Promise((resolve, reject) => {
-    // Pass the prompt via -p argument
     args.push('-p', prompt);
     const child = spawn(agyPath, args, {
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -154,6 +159,7 @@ async function executeAgy(
 
     const timer = setTimeout(() => {
       child.kill('SIGKILL');
+      logActivity({ category: 'agy_call', level: 'error', message: `agy timed out (${model})`, durationMs: Date.now() - startedAt, details: { model } });
       reject(new LlmTimeoutError(`LLM request timed out after ${timeoutMs}ms`));
     }, timeoutMs);
 
@@ -167,19 +173,21 @@ async function executeAgy(
 
     child.on('error', (err) => {
       clearTimeout(timer);
+      logActivity({ category: 'agy_call', level: 'error', message: `agy spawn error: ${err.message}`, durationMs: Date.now() - startedAt, details: { model } });
       reject(new LlmError(`Failed to spawn agy: ${err.message}`));
     });
 
     child.on('close', (code) => {
       clearTimeout(timer);
+      const durationMs = Date.now() - startedAt;
       if (code !== 0) {
+        logActivity({ category: 'agy_call', level: 'error', message: `agy exited with code ${code}`, durationMs, details: { model, code } });
         reject(new LlmError(`agy exited with code ${code}: ${stderrData}`));
         return;
       }
+      logActivity({ category: 'agy_call', message: `agy completed (${model})`, durationMs, details: { model, responseLength: stdoutData.length } });
       resolve(stdoutData);
     });
-
-
   });
 }
 

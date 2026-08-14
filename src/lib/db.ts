@@ -115,3 +115,30 @@ export function findCourseForMessage(message: string): { id: number; fullname: s
   });
   return matches.length === 1 ? { id: matches[0].id, fullname: matches[0].fullname } : null;
 }
+
+export interface CourseWithMaterials {
+  id: number;
+  fullname: string;
+  shortname: string;
+  materials: { name: string; filename: string | null; localPath: string | null; sectionName: string }[];
+}
+
+export function getCoursesWithMaterials(): CourseWithMaterials[] {
+  const db = getDb();
+  const courses = db.prepare('SELECT id, fullname, shortname FROM courses WHERE visible = 1').all() as {
+    id: number; fullname: string; shortname: string;
+  }[];
+  const stmt = db.prepare(`
+    SELECT m.name, mf.original_filename as filename, mf.local_path as localPath,
+      COALESCE(s.name, m.section_name, 'General') as sectionName
+    FROM materials m
+    LEFT JOIN material_files mf ON mf.material_id = m.id
+    LEFT JOIN course_sections s ON s.id = m.section_id
+    WHERE m.course_id = ?
+    ORDER BY sectionName, m.name
+  `);
+  return courses.map(c => ({
+    ...c,
+    materials: stmt.all(c.id) as CourseWithMaterials['materials'],
+  }));
+}

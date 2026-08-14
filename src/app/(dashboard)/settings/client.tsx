@@ -36,7 +36,9 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
       const keys = path.split('.');
       let obj: any = next;
       for (let i = 0; i < keys.length - 1; i++) obj = obj[keys[i]];
-      obj[keys[keys.length - 1]] = value;
+      const last = keys[keys.length - 1];
+      const current = obj[last];
+      obj[last] = typeof current === 'number' ? Number(value) : value;
       return next;
     });
   };
@@ -169,40 +171,75 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
         {settings.tts.provider === 'google' && (
           <div className="flex flex-col gap-4 p-4 rounded-lg bg-stone-950 border border-white/[0.04]">
             <div className="flex flex-col gap-2">
-              <label className={labelClass}>
-                API key
-                <span className="font-normal text-stone-500"> (leave empty for service account auth)</span>
-              </label>
+              <label className={labelClass}>Model</label>
               <input
-                type="password"
-                value={settings.tts.google.apiKey}
-                onChange={(e) => update('tts.google.apiKey', e.target.value)}
-                placeholder="AIza..."
+                type="text"
+                value={settings.tts.google.modelName}
+                onChange={(e) => update('tts.google.modelName', e.target.value)}
+                placeholder="gemini-3.1-flash-tts-preview"
                 className={inputClass}
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label className={labelClass}>Voice name</label>
+                <input
+                  type="text"
+                  value={settings.tts.google.voice}
+                  onChange={(e) => update('tts.google.voice', e.target.value)}
+                  placeholder="Sulafat"
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className={labelClass}>Language code</label>
+                <input
+                  type="text"
+                  value={settings.tts.google.languageCode}
+                  onChange={(e) => update('tts.google.languageCode', e.target.value)}
+                  placeholder="es-419"
+                  className={inputClass}
+                />
+              </div>
+            </div>
             <div className="flex flex-col gap-2">
-              <label className={labelClass}>Voice name</label>
+              <label className={labelClass}>Voice prompt</label>
               <input
                 type="text"
-                value={settings.tts.google.voice}
-                onChange={(e) => update('tts.google.voice', e.target.value)}
-                placeholder="es-US-Studio-B"
+                value={settings.tts.google.prompt}
+                onChange={(e) => update('tts.google.prompt', e.target.value)}
+                placeholder="Read aloud in a warm, welcoming tone."
                 className={inputClass}
               />
               <p className="text-xs text-stone-500">
-                See available voices at cloud.google.com/text-to-speech/docs/voices
+                Controls the tone and style of the voice.
               </p>
             </div>
-            <div className="flex flex-col gap-2">
-              <label className={labelClass}>Language code</label>
-              <input
-                type="text"
-                value={settings.tts.google.languageCode}
-                onChange={(e) => update('tts.google.languageCode', e.target.value)}
-                placeholder="es-US"
-                className={inputClass}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label className={labelClass}>Speaking rate</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.25"
+                  max="4"
+                  value={settings.tts.google.speakingRate}
+                  onChange={(e) => update('tts.google.speakingRate', e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className={labelClass}>Pitch</label>
+                <input
+                  type="number"
+                  step="1"
+                  min="-20"
+                  max="20"
+                  value={settings.tts.google.pitch}
+                  onChange={(e) => update('tts.google.pitch', e.target.value)}
+                  className={inputClass}
+                />
+              </div>
             </div>
           </div>
         )}
