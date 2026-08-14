@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { updateSettings } from './actions';
+import { updateSettings, unlockCredentials, saveCredentials } from './actions';
 import { AlertBanner } from '@/components/AlertBanner';
 import type { AppSettings } from '@/lib/settings';
 
@@ -245,6 +245,13 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
         )}
       </div>
 
+      {/* Credentials Section */}
+      <div className="bg-stone-900 border border-white/[0.06] rounded-xl p-6 shadow-sm mb-6">
+        <h2 className="text-base font-semibold mb-1">Credentials</h2>
+        <p className="text-xs text-stone-500 mb-6">Update your Moodle and Gmail credentials. Enter your master password to unlock.</p>
+        <CredentialsEditor />
+      </div>
+
       {/* Save button */}
       <button
         onClick={handleSave}
@@ -261,5 +268,133 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
         )}
       </button>
     </>
+  );
+}
+
+function CredentialsEditor() {
+  const [masterPassword, setMasterPassword] = useState('');
+  const [unlocked, setUnlocked] = useState(false);
+  const [uesUsername, setUesUsername] = useState('');
+  const [uesPassword, setUesPassword] = useState('');
+  const [gmailAppPassword, setGmailAppPassword] = useState('');
+  const [hasUesPassword, setHasUesPassword] = useState(false);
+  const [hasGmailAppPassword, setHasGmailAppPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isPending, startTransition] = useTransition();
+
+  const handleUnlock = () => {
+    if (!masterPassword.trim()) return;
+    setError('');
+    startTransition(async () => {
+      const result = await unlockCredentials(masterPassword);
+      if (result.success && result.credentials) {
+        setUnlocked(true);
+        setUesUsername(result.credentials.uesUsername);
+        setHasUesPassword(result.credentials.hasUesPassword);
+        setHasGmailAppPassword(result.credentials.hasGmailAppPassword);
+      } else {
+        setError(result.error || 'Failed to unlock.');
+      }
+    });
+  };
+
+  const handleSave = () => {
+    setError('');
+    setSuccess('');
+    const updates: Record<string, string> = {};
+    if (uesUsername.trim()) updates.uesUsername = uesUsername.trim();
+    if (uesPassword) updates.uesPassword = uesPassword;
+    if (gmailAppPassword) updates.gmailAppPassword = gmailAppPassword;
+
+    if (Object.keys(updates).length === 0) {
+      setError('No changes to save.');
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await saveCredentials(masterPassword, updates);
+      if (result.success) {
+        setSuccess('Credentials updated.');
+        setUesPassword('');
+        setGmailAppPassword('');
+        setHasUesPassword(true);
+        if (updates.gmailAppPassword) setHasGmailAppPassword(true);
+      } else {
+        setError(result.error || 'Failed to save.');
+      }
+    });
+  };
+
+  if (!unlocked) {
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-2">
+          <input
+            type="password"
+            value={masterPassword}
+            onChange={(e) => { setMasterPassword(e.target.value); setError(''); }}
+            onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+            placeholder="Master password"
+            className={inputClass}
+          />
+          <button
+            onClick={handleUnlock}
+            disabled={isPending || !masterPassword.trim()}
+            className="px-4 py-2.5 rounded-lg bg-stone-700 text-stone-200 text-sm font-medium border border-white/[0.06] hover:bg-stone-600 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          >
+            {isPending ? <span className="spinner spinner--sm" /> : 'Unlock'}
+          </button>
+        </div>
+        {error && <p className="text-xs text-danger">{error}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4 p-4 rounded-lg bg-stone-950 border border-white/[0.04]">
+      <div className="flex flex-col gap-2">
+        <label className={labelClass}>UES Username</label>
+        <input
+          type="text"
+          value={uesUsername}
+          onChange={(e) => setUesUsername(e.target.value)}
+          className={inputClass}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className={labelClass}>UES Password</label>
+        <input
+          type="password"
+          value={uesPassword}
+          onChange={(e) => setUesPassword(e.target.value)}
+          placeholder={hasUesPassword ? '••••••••  (unchanged)' : 'Enter password'}
+          className={inputClass}
+        />
+      </div>
+      <div className="border-t border-white/[0.04] pt-4">
+        <div className="flex flex-col gap-2">
+          <label className={labelClass}>
+            Gmail App Password <span className="font-normal text-stone-500">(optional)</span>
+          </label>
+          <input
+            type="password"
+            value={gmailAppPassword}
+            onChange={(e) => setGmailAppPassword(e.target.value)}
+            placeholder={hasGmailAppPassword ? '••••••••  (unchanged)' : '16-character app password'}
+            className={inputClass}
+          />
+        </div>
+      </div>
+      {error && <p className="text-xs text-danger">{error}</p>}
+      {success && <p className="text-xs text-success">{success}</p>}
+      <button
+        onClick={handleSave}
+        disabled={isPending}
+        className="self-start inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-600 text-white text-sm font-medium border border-accent-700 hover:bg-accent-500 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {isPending ? <><span className="spinner spinner--sm" /> Saving...</> : 'Update credentials'}
+      </button>
+    </div>
   );
 }
