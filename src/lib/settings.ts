@@ -15,6 +15,9 @@ export interface AppSettings {
       languageCode: string;
     };
   };
+  character: string;
+  animation: string;
+  talkingAnimation: string;
 }
 
 const DEFAULTS: AppSettings = {
@@ -30,6 +33,9 @@ const DEFAULTS: AppSettings = {
       languageCode: 'es-US',
     },
   },
+  character: 'default.vrm',
+  animation: 'idle_loop.vrma',
+  talkingAnimation: 'procedural',
 };
 
 function getSettingsPath(): string {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { updateSettings } from './actions';
 import { AlertBanner } from '@/components/AlertBanner';
 import type { AppSettings } from '@/lib/settings';
@@ -14,6 +14,20 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
   const [settings, setSettings] = useState(initialSettings);
   const [isSaving, startSave] = useTransition();
   const [feedback, setFeedback] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
+  const [availableCharacters, setAvailableCharacters] = useState<string[]>([]);
+  const [availableAnimations, setAvailableAnimations] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch('/api/characters')
+      .then(r => r.json())
+      .then(d => setAvailableCharacters(d.characters || []))
+      .catch(() => {});
+      
+    fetch('/api/animations')
+      .then(r => r.json())
+      .then(d => setAvailableAnimations(d.animations || []))
+      .catch(() => {});
+  }, []);
 
   const update = (path: string, value: string) => {
     setFeedback(null);
@@ -46,6 +60,59 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
       </div>
 
       {feedback && <AlertBanner variant={feedback.type} message={feedback.message} />}
+
+      {/* Appearance Section */}
+      <div className="bg-stone-900 border border-white/[0.06] rounded-xl p-6 shadow-sm mb-6">
+        <h2 className="text-base font-semibold mb-1">Appearance</h2>
+        <p className="text-xs text-stone-500 mb-6">Customize your dashboard character.</p>
+        
+        <div className="flex flex-col gap-2">
+          <label className={labelClass}>3D Character Model</label>
+          <select
+            value={settings.character}
+            onChange={(e) => update('character', e.target.value)}
+            className={`${inputClass} appearance-none cursor-pointer`}
+          >
+            {availableCharacters.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          <p className="text-xs text-stone-500">
+            Drop .vrm or .glb files into `~/.ues-agent/data/characters/` to add more.
+          </p>
+        </div>
+        
+        <div className="flex flex-col gap-2 mt-4">
+          <label className={labelClass}>Idle Animation</label>
+          <select
+            value={settings.animation}
+            onChange={(e) => update('animation', e.target.value)}
+            className={`${inputClass} appearance-none cursor-pointer`}
+          >
+            <option value="procedural">Procedural (Built-in)</option>
+            {availableAnimations.map(a => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="flex flex-col gap-2 mt-4">
+          <label className={labelClass}>Talking Animation</label>
+          <select
+            value={settings.talkingAnimation}
+            onChange={(e) => update('talkingAnimation', e.target.value)}
+            className={`${inputClass} appearance-none cursor-pointer`}
+          >
+            <option value="procedural">Procedural (Built-in)</option>
+            {availableAnimations.map(a => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+          <p className="text-xs text-stone-500 mt-2">
+            Drop .vrma files into `~/.ues-agent/data/animations/` to add custom animations.
+          </p>
+        </div>
+      </div>
 
       {/* TTS Section */}
       <div className="bg-stone-900 border border-white/[0.06] rounded-xl p-6 shadow-sm mb-6">

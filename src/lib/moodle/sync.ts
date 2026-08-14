@@ -9,8 +9,9 @@ import { SessionManager } from '@/lib/moodle/session';
 import type { MoodleSession } from '@/lib/moodle/session';
 import { fetchCourses, fetchAssignments } from '@/lib/moodle/api';
 import type { ExtractedMaterial, MoodleModuleContent } from '@/lib/moodle/api';
-import { buildMaterialPath, getMaterialMaxFileBytes, writeMaterialFile } from '@/lib/materials/storage';
+import { buildMaterialPath, getMaterialMaxFileBytes, writeMaterialFile, removeMaterialFile } from '@/lib/materials/storage';
 import { logActivity } from '@/lib/activity-log';
+import { capturePreSyncState, computeDiff, saveSyncSnapshot } from '@/lib/sync-diff';
 
 export interface SyncResult {
   success: boolean;
@@ -81,15 +82,30 @@ async function getFallbackModuleContents(
   }];
 }
 
+/**
+ * Parses a downloaded Moodle resource HTML page to find the actual file URL
+ * (pluginfile.php link). Returns null if no link is found.
+ */
+function extractPluginfileUrl(html: string, baseUrl: string): string | null {
+  // Match pluginfile.php URLs for mod_resource content
+  const pattern = /https?:\/\/[^"'\s]*pluginfile\.php\/\d+\/mod_resource\/content\/\d+\/[^"'\s]+/g;
+  const matches = html.match(pattern);
+  if (!matches || matches.length === 0) return null;
+  // Deduplicate and return the first unique URL
+  const unique = [...new Set(matches.map(u => u.replace(/&amp;/g, '&')))];
+  return unique[0] || null;
+}
+
 type MaterialFileStatements = {
   findMaterialFile: { get: (materialId: number, sourceUrl: string) => { id: number; local_path: string | null; content_hash: string | null } | undefined };
   insertMaterialFile: { run: (params: Record<string, unknown>) => unknown };
   updateMaterialFile: { run: (params: Record<string, unknown>) => unknown };
+  findMaterialFileMime: { get: (id: number) => { mime_type: string | null } | undefined };
 };
 
 async function syncMaterialFile({
   sm, session, materialId, courseId, sectionPosition, moduleId, content, now,
-  findMaterialFile, insertMaterialFile, updateMaterialFile,
+  findMaterialFile, insertMaterialFile, updateMaterialFile, findMaterialFileMime,
 }: {
   sm: SessionManager;
   session: MoodleSession;
@@ -101,7 +117,10 @@ async function syncMaterialFile({
   now: string;
 } & MaterialFileStatements): Promise<'downloaded' | 'skipped' | 'failed' | 'unchanged'> {
   const existing = findMaterialFile.get(materialId, content.fileurl);
-  if (existing?.local_path && existing.content_hash) return 'unchanged';
+  // Re-process if the existing file is an HTML wrapper (text/html for a resource type)
+  const existingMime = existing ? (findMaterialFileMime.get(existing.id) as { mime_type: string | null } | undefined)?.mime_type : null;
+  const isHtmlWrapper = existingMime === 'text/html' && content.type !== 'page_snapshot';
+  if (existing?.local_path && existing.content_hash && !isHtmlWrapper) return 'unchanged';
 
   const base = {
     material_id: materialId,
@@ -129,6 +148,43 @@ async function syncMaterialFile({
   try {
     const download = await sm.download(session, content.fileurl, maxBytes);
     const mime = download.contentType?.split(';', 1)[0] || content.mimetype || null;
+
+    // If we got an HTML page for a resource/folder type, try to extract the actual file URL
+    if (mime === 'text/html' && ['module_download', 'page_snapshot'].includes(content.type)) {
+      const html = download.bytes.toString('utf-8');
+      const realUrl = extractPluginfileUrl(html, sm.getBaseUrl());
+      if (realUrl) {
+        const realDownload = await sm.download(session, realUrl, maxBytes);
+        const realMime = realDownload.contentType?.split(';', 1)[0] || null;
+        if (realMime && realMime !== 'text/html') {
+          // Successfully got the actual file — use it instead
+          const realFilename = filenameForDownload(
+            { ...content, mimetype: realMime },
+            realMime,
+            moduleId,
+          );
+          const destination = buildMaterialPath(courseId, sectionPosition, moduleId, realFilename);
+          const saved = await writeMaterialFile(destination, realDownload.bytes);
+          
+          if (existing?.local_path && existing.local_path !== destination) {
+            await removeMaterialFile(existing.local_path);
+          }
+          
+          save({
+            original_filename: realFilename,
+            mime_type: realMime,
+            local_path: destination,
+            file_size: saved.size,
+            content_hash: saved.hash,
+            status: 'downloaded',
+            error_message: null,
+            downloaded_at: now,
+          });
+          return 'downloaded';
+        }
+      }
+    }
+
     const filename = filenameForDownload(content, mime, moduleId);
     const destination = buildMaterialPath(courseId, sectionPosition, moduleId, filename);
     const saved = await writeMaterialFile(destination, download.bytes);
@@ -274,6 +330,7 @@ async function syncAssignments(
       error_message = @error_message, downloaded_at = @downloaded_at, updated_at = @updated_at
     WHERE id = @id
   `);
+  const findMaterialFileMime = db.prepare('SELECT mime_type FROM material_files WHERE id = ?');
 
   let assignmentsCount = 0;
   let todosCreated = 0;
@@ -374,6 +431,7 @@ async function syncAssignments(
             findMaterialFile: findMaterialFile as unknown as MaterialFileStatements['findMaterialFile'],
             insertMaterialFile: insertMaterialFile as unknown as MaterialFileStatements['insertMaterialFile'],
             updateMaterialFile: updateMaterialFile as unknown as MaterialFileStatements['updateMaterialFile'],
+            findMaterialFileMime: findMaterialFileMime as unknown as MaterialFileStatements['findMaterialFileMime'],
           });
           if (result === 'downloaded') filesDownloaded++;
           else if (result === 'skipped') filesSkipped++;
@@ -400,6 +458,10 @@ export async function syncMoodle(
   const startTime = Date.now();
   const db = getDb();
   logActivity({ category: 'sync', message: 'Moodle sync started' });
+
+  // Capture state before sync for diff computation
+  let preSyncState: ReturnType<typeof capturePreSyncState> | null = null;
+  try { preSyncState = capturePreSyncState(); } catch { /* first run */ }
 
   const insertLog = db.prepare(`
     INSERT INTO sync_log (sync_type, status, items_synced, started_at)
@@ -457,6 +519,16 @@ export async function syncMoodle(
     errorMsg || null,
     logId,
   );
+
+  // After successful sync, compute and save diff
+  if (success && preSyncState) {
+    try {
+      const diff = computeDiff(preSyncState);
+      saveSyncSnapshot(Number(logId), diff);
+    } catch (err) {
+      console.error('[Sync Diff]', err);
+    }
+  }
 
   return {
     success,

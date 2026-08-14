@@ -5,6 +5,8 @@ import { CopilotChat } from '@/components/CopilotChat';
 import { PasswordModal } from '@/components/PasswordModal';
 import { EmptyState } from '@/components/EmptyState';
 import { AlertBanner } from '@/components/AlertBanner';
+import { SyncBriefing } from '@/components/SyncBriefing';
+import { CharacterViewer, CharacterPose } from '@/components/CharacterViewer';
 import {
   triggerMoodleSync,
   updateTodoStatus,
@@ -76,15 +78,22 @@ const statusConfig = {
 export function DashboardClient({
   initialSyncStatus,
   initialTodos,
+  activeCharacter,
+  activeAnimation,
+  activeTalkingAnimation,
 }: {
   initialSyncStatus: SyncStatus;
   initialTodos: TodoItem[];
+  activeCharacter: string;
+  activeAnimation: string;
+  activeTalkingAnimation: string;
 }) {
   const [syncStatus, setSyncStatus] = useState(initialSyncStatus);
   const [todos, setTodos] = useState(initialTodos);
   const [isSyncing, startSync] = useTransition();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [syncError, setSyncError] = useState('');
+  const [characterPose, setCharacterPose] = useState<CharacterPose>('idle');
 
   const handleSync = () => {
     doSync();
@@ -141,17 +150,15 @@ export function DashboardClient({
   return (
     <>
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
-          <div>
+      <div className="mb-8 flex items-start justify-between flex-wrap gap-4 pointer-events-none">
+          <div className="pointer-events-auto">
             <h1 className="text-2xl font-semibold tracking-tight mb-1">Todos</h1>
-            <p className="text-sm text-stone-400">
-              {todos.length === 0
-                ? 'No active tasks. Sync with Moodle to get started.'
-                : `${todos.length} active task${todos.length === 1 ? '' : 's'}`}
+            <p className="text-sm text-stone-400 mt-1">
+              {todos.filter((t) => t.status === 'done').length} / {todos.length} completed
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pointer-events-auto">
             {/* Sync status badge */}
             <div className="flex items-center gap-2 text-xs text-stone-500">
               {syncStatus.status !== 'never' && (
@@ -189,110 +196,137 @@ export function DashboardClient({
 
         {/* Sync error */}
         {syncError && (
-          <AlertBanner variant="error" title="Sync Failed" message={syncError} />
+          <div className="pointer-events-auto">
+            <AlertBanner variant="error" title="Sync Failed" message={syncError} />
+          </div>
         )}
         
-        {/* Chat Bot Area */}
-        <div className="flex flex-col mb-8 max-w-4xl">
-          <h2 className="text-lg font-semibold mb-4">Tu Copiloto Universitario</h2>
-          <CopilotChat />
+        {/* Full-screen Character Background */}
+        <div className="fixed inset-0 z-0 opacity-40">
+          <CharacterViewer 
+            characterUrl={`/api/characters/${activeCharacter}`}
+            animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
+            talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
+            pose={characterPose}
+            className="w-full h-full"
+          />
         </div>
 
-        {/* Sync stats (when data exists) */}
-        {syncStatus.status !== 'never' && (
-          <div className="grid grid-cols-3 max-sm:grid-cols-1 gap-4 mb-8">
-            {[
-              { label: 'Courses', value: syncStatus.coursesCount, icon: '📖' },
-              { label: 'Assignments', value: syncStatus.assignmentsCount, icon: '📝' },
-              { label: 'Active Todos', value: syncStatus.todosCount, icon: '✅' },
-            ].map(({ label, value, icon }) => (
-              <div
-                key={label}
-                className="bg-stone-900 border border-white/[0.06] rounded-xl p-5 shadow-sm"
-              >
-                <div className="flex items-center gap-2 text-stone-400 text-xs font-medium mb-2">
-                  <span>{icon}</span>
-                  {label}
-                </div>
-                <div className="text-2xl font-semibold tracking-tight">{value}</div>
+        {/* Content Overlay */}
+        <div className="relative z-10 grid grid-cols-[300px_1fr_400px] max-lg:grid-cols-1 gap-6 mb-8 mt-4 pointer-events-none">
+          {/* Left: Briefing + Stats */}
+          <div className="flex flex-col gap-4 max-lg:order-2 pointer-events-auto">
+            <SyncBriefing onPlayStateChange={(playing) => setCharacterPose(playing ? 'speaking' : 'idle')} />
+            
+            {/* Sync stats (when data exists) */}
+            {syncStatus.status !== 'never' && (
+              <div className="flex flex-col gap-4">
+                {[
+                  { label: 'Courses', value: syncStatus.coursesCount, icon: '📖' },
+                  { label: 'Assignments', value: syncStatus.assignmentsCount, icon: '📝' },
+                  { label: 'Active Todos', value: syncStatus.todosCount, icon: '✅' },
+                ].map(({ label, value, icon }) => (
+                  <div
+                    key={label}
+                    className="bg-stone-900 border border-white/[0.06] rounded-xl p-5 shadow-sm flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2 text-stone-400 text-sm font-medium">
+                      <span>{icon}</span>
+                      {label}
+                    </div>
+                    <div className="text-xl font-semibold tracking-tight">{value}</div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+          
+          {/* Center: Empty Stage for character to show through */}
+          <div className="relative min-h-[400px] max-lg:hidden" />
+          
+          {/* Right: Copilot Chat */}
+          <div className="flex flex-col max-lg:order-3 pointer-events-auto">
+            <CopilotChat />
+          </div>
+        </div>
 
         {/* Todo list */}
-        {todos.length === 0 ? (
-          <EmptyState
-            icon="📋"
-            title="No tasks yet"
-            description='Click "Sync Moodle" to pull your courses and assignments. Todos will be created automatically from upcoming due dates.'
-          />
-        ) : (
-          <div className="flex flex-col gap-2">
-            {todos.map((todo, i) => {
-              const due = formatDueDate(todo.dueDate);
-              const cfg = statusConfig[todo.status as keyof typeof statusConfig] || statusConfig.pending;
+        <div className="pointer-events-none">
+          {todos.length === 0 ? (
+            <div className="pointer-events-auto">
+              <EmptyState
+                icon="📋"
+                title="No tasks yet"
+                description='Click "Sync Moodle" to pull your courses and assignments. Todos will be created automatically from upcoming due dates.'
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 pointer-events-auto">
+              {todos.map((todo, i) => {
+                const due = formatDueDate(todo.dueDate);
+                const cfg = statusConfig[todo.status as keyof typeof statusConfig] || statusConfig.pending;
 
-              return (
-                <div
-                  key={todo.id}
-                  className="group bg-stone-900 border border-white/[0.06] rounded-xl p-5 shadow-sm hover:border-white/10 transition-all animate-fade-in"
-                  style={{ animationDelay: `${i * 50}ms` }}
-                >
-                  <div className="flex items-start gap-4">
-                    {/* Status toggle */}
-                    <button
-                      onClick={() =>
-                        handleStatusChange(
-                          todo.id,
-                          todo.status === 'pending' ? 'in_progress' : 'done',
-                        )
-                      }
-                      className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:scale-110 ${
-                        todo.status === 'in_progress'
-                          ? 'border-accent-400 bg-accent-400/20'
-                          : 'border-stone-600 hover:border-stone-400'
-                      }`}
-                      title={todo.status === 'pending' ? 'Start working' : 'Mark as done'}
-                    >
-                      {todo.status === 'in_progress' && (
-                        <span className="w-2 h-2 rounded-full bg-accent-400" />
-                      )}
-                    </button>
+                return (
+                  <div
+                    key={todo.id}
+                    className="group bg-stone-900 border border-white/[0.06] rounded-xl p-5 shadow-sm hover:border-white/10 transition-all animate-fade-in"
+                    style={{ animationDelay: `${i * 50}ms` }}
+                  >
+                    <div className="flex items-start gap-4">
+                      {/* Status toggle */}
+                      <button
+                        onClick={() =>
+                          handleStatusChange(
+                            todo.id,
+                            todo.status === 'pending' ? 'in_progress' : 'done',
+                          )
+                        }
+                        className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all cursor-pointer hover:scale-110 ${
+                          todo.status === 'in_progress'
+                            ? 'border-accent-400 bg-accent-400/20'
+                            : 'border-stone-600 hover:border-stone-400'
+                        }`}
+                        title={todo.status === 'pending' ? 'Start working' : 'Mark as done'}
+                      >
+                        {todo.status === 'in_progress' && (
+                          <span className="w-2 h-2 rounded-full bg-accent-400" />
+                        )}
+                      </button>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-medium text-sm leading-snug">{todo.title}</h3>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${cfg.bg} ${cfg.text}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                          {cfg.label}
-                        </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-medium text-sm leading-snug">{todo.title}</h3>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${cfg.bg} ${cfg.text}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                            {cfg.label}
+                          </span>
+                        </div>
+
+                        {todo.courseName && (
+                          <p className="text-xs text-stone-500 mt-1">{todo.courseName}</p>
+                        )}
+
+                        {todo.description && (
+                          <p className="text-xs text-stone-400 mt-2 line-clamp-2 leading-relaxed">
+                            {todo.description}
+                          </p>
+                        )}
                       </div>
 
-                      {todo.courseName && (
-                        <p className="text-xs text-stone-500 mt-1">{todo.courseName}</p>
-                      )}
-
-                      {todo.description && (
-                        <p className="text-xs text-stone-400 mt-2 line-clamp-2 leading-relaxed">
-                          {todo.description}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Due date */}
-                    <div className={`text-right shrink-0 ${urgencyColors[due.urgency]}`}>
-                      <p className="text-xs font-medium">{due.label}</p>
-                      {due.urgency === 'overdue' && (
-                        <p className="text-[10px] mt-0.5 opacity-75">Overdue</p>
-                      )}
+                      {/* Due date */}
+                      <div className={`text-right shrink-0 ${urgencyColors[due.urgency]}`}>
+                        <p className="text-xs font-medium">{due.label}</p>
+                        {due.urgency === 'overdue' && (
+                          <p className="text-[10px] mt-0.5 opacity-75">Overdue</p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       {showPasswordModal && (
         <PasswordModal
           description="Enter your master password to sync with Moodle."

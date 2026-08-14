@@ -1,5 +1,5 @@
 import Tesseract from 'tesseract.js';
-import pdfParse from 'pdf-parse';
+const pdfParse = require('pdf-parse');
 import { readFile } from 'fs/promises';
 
 /**

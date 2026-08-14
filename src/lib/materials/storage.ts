@@ -53,3 +53,11 @@ export async function writeMaterialFile(destination: string, bytes: Buffer): Pro
     hash: crypto.createHash('sha256').update(bytes).digest('hex'),
   };
 }
+
+export async function removeMaterialFile(filePath: string): Promise<void> {
+  try {
+    await fs.unlink(filePath);
+  } catch {
+    // Ignore if file doesn't exist
+  }
+}
