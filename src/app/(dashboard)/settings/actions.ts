@@ -7,9 +7,12 @@ export async function loadSettings(): Promise<AppSettings> {
   return getSettings();
 }
 
+import { revalidatePath } from 'next/cache';
+
 export async function updateSettings(settings: AppSettings): Promise<{ success: boolean; error?: string }> {
   try {
     saveSettings(settings);
+    revalidatePath('/');
     return { success: true };
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Failed to save settings' };

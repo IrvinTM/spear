@@ -91,7 +91,7 @@ function VRMModel({ url, pose, animationUrl, talkingAnimationUrl }: { url: strin
 
     if (animationUrl) {
       loader.load(animationUrl, (gltf) => {
-        const vrmAnimation = gltf.userData.vrmAnimation as VRMAnimation | undefined;
+        const vrmAnimation = gltf.userData.vrmAnimations?.[0] || gltf.userData.vrmAnimation;
         if (vrmAnimation) {
           actionsRef.current.idle = newMixer.clipAction(createVRMAnimationClip(vrmAnimation, vrm));
           playCurrentPose();
@@ -101,7 +101,7 @@ function VRMModel({ url, pose, animationUrl, talkingAnimationUrl }: { url: strin
     
     if (talkingAnimationUrl) {
       loader.load(talkingAnimationUrl, (gltf) => {
-        const vrmAnimation = gltf.userData.vrmAnimation as VRMAnimation | undefined;
+        const vrmAnimation = gltf.userData.vrmAnimations?.[0] || gltf.userData.vrmAnimation;
         if (vrmAnimation) {
           actionsRef.current.talking = newMixer.clipAction(createVRMAnimationClip(vrmAnimation, vrm));
           playCurrentPose();
