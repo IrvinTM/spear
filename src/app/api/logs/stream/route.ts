@@ -5,7 +5,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: Request) {
   initSchema();
   const url = new URL(req.url);
-  let lastId = Number(url.searchParams.get('since') || '0');
+  const sinceParam = Number(url.searchParams.get('since') || '0');
+  let lastId = sinceParam > 0
+    ? sinceParam
+    : ((getDb().prepare('SELECT MAX(id) as maxId FROM request_logs').get() as { maxId: number | null })?.maxId ?? 0);
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({

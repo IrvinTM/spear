@@ -41,7 +41,7 @@ const DEFAULTS: AppSettings = {
       pitch: 0,
     },
   },
-  character: 'default.vrm',
+  character: 'cosmic-dweller.vrm',
   animation: 'idle_loop.vrma',
   talkingAnimation: 'talking.vrma',
 };

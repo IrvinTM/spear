@@ -3,7 +3,7 @@ import path from 'node:path';
 import { getAgentHome } from '@/lib/config';
 
 const CHARACTERS_DIR = () => path.join(getAgentHome(), 'data', 'characters');
-const DEFAULT_CHARACTER = 'default.vrm';
+const DEFAULT_CHARACTER = 'cosmic-dweller.vrm';
 
 export async function getCharactersDir(): Promise<string> {
   const dir = CHARACTERS_DIR();
@@ -29,6 +29,12 @@ export async function getCharacterPath(filename: string): Promise<string | null>
     await fs.access(filePath);
     return filePath;
   } catch {
-    return null;
+    const bundled = path.join(process.cwd(), 'public', 'defaults', filename);
+    try {
+      await fs.access(bundled);
+      return bundled;
+    } catch {
+      return null;
+    }
   }
 }

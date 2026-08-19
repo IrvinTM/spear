@@ -23,6 +23,12 @@ export async function getAnimationPath(filename: string): Promise<string | null>
     await fs.access(filePath);
     return filePath;
   } catch {
-    return null;
+    const bundled = path.join(process.cwd(), 'public', 'defaults', filename);
+    try {
+      await fs.access(bundled);
+      return bundled;
+    } catch {
+      return null;
+    }
   }
 }

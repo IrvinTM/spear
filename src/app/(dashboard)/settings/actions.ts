@@ -2,6 +2,7 @@
 
 import { getSettings, saveSettings, type AppSettings } from '@/lib/settings';
 import { unlockVault, updateCredentials, type VaultCredentials } from '@/lib/vault';
+import { createSession } from '@/lib/auth-session';
 
 export async function loadSettings(): Promise<AppSettings> {
   return getSettings();
@@ -41,6 +42,8 @@ export async function saveCredentials(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await updateCredentials(masterPassword, updates);
+    const refreshed = await unlockVault(masterPassword);
+    await createSession(refreshed);
     return { success: true };
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Failed to update credentials.' };
