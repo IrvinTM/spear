@@ -97,6 +97,18 @@ export function getGlobalContext() {
   materials.forEach((material) => {
     contextText += `- ${material.courseName} / ${material.sectionName}: ${material.materialName}${material.status ? ` (${material.status})` : ''}\n`;
   });
+
+  const emails = db.prepare(`
+    SELECT from_name, subject, summary, received_at
+    FROM emails
+    ORDER BY received_at DESC
+    LIMIT 10
+  `).all() as { from_name: string | null; subject: string; summary: string | null; received_at: string }[];
+  contextText += `\n### Correos recientes (Emails):\n`;
+  if (emails.length === 0) contextText += `No hay correos recientes.\n`;
+  emails.forEach((email) => {
+    contextText += `- De: ${email.from_name || 'Desconocido'} | Asunto: ${email.subject} | Recibido: ${email.received_at}\n  Resumen: ${email.summary ? email.summary.replace(/\n/g, ' ') : 'Sin resumen'}\n`;
+  });
   
   return contextText;
 }

@@ -13,7 +13,10 @@ export async function getAnimationsDir(): Promise<string> {
 export async function listAnimations(): Promise<string[]> {
   const dir = await getAnimationsDir();
   const files = await fs.readdir(dir);
-  return files.filter(f => f.endsWith('.vrma') || f.endsWith('.glb'));
+  const bundledDir = path.join(process.cwd(), 'public', 'defaults');
+  const bundledFiles = await fs.readdir(bundledDir).catch(() => []);
+  const allFiles = Array.from(new Set([...files, ...bundledFiles]));
+  return allFiles.filter(f => f.endsWith('.vrma') || f.endsWith('.glb'));
 }
 
 export async function getAnimationPath(filename: string): Promise<string | null> {

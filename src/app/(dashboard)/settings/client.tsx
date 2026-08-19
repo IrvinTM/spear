@@ -114,6 +114,31 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
             Drop .vrma files into `~/.ues-agent/data/animations/` to add custom animations.
           </p>
         </div>
+        
+        <div className="flex flex-col gap-2 mt-4">
+          <label className={labelClass}>Background Image URL</label>
+          <input
+            type="text"
+            value={settings.background}
+            onChange={(e) => update('background', e.target.value)}
+            placeholder="https://example.com/image.png (leave empty for default)"
+            className={inputClass}
+          />
+        </div>
+        
+        <div className="flex flex-col gap-2 mt-4">
+          <label className={labelClass}>Calendar URL (.ics)</label>
+          <input
+            type="text"
+            value={settings.calendarUrl}
+            onChange={(e) => update('calendarUrl', e.target.value)}
+            placeholder="https://calendar.google.com/calendar/ical/.../basic.ics"
+            className={inputClass}
+          />
+          <p className="text-xs text-stone-500 mt-2">
+            Paste an iCal/WebCal URL to display your upcoming classes on the dashboard.
+          </p>
+        </div>
       </div>
 
       {/* TTS Section */}

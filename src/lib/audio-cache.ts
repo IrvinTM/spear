@@ -53,3 +53,35 @@ export async function getSnapshotAudio(snapshotId: number): Promise<{
 
   return { buffer, contentType };
 }
+
+export async function getEmailBriefingAudio(text: string): Promise<{
+  buffer: Buffer;
+  contentType: string;
+} | null> {
+  if (!text) return null;
+
+  const cacheDir = getAudioCacheDir();
+  await fs.mkdir(cacheDir, { recursive: true });
+  
+  const hash = crypto.createHash('sha256').update(text).digest('hex').slice(0, 16);
+  const mp3Path = path.join(cacheDir, `email-briefing-${hash}.mp3`);
+  const wavPath = path.join(cacheDir, `email-briefing-${hash}.wav`);
+
+  // Try to read from cache
+  try {
+    const buffer = await fs.readFile(mp3Path);
+    return { buffer, contentType: 'audio/mpeg' };
+  } catch {}
+  try {
+    const buffer = await fs.readFile(wavPath);
+    return { buffer, contentType: 'audio/wav' };
+  } catch {}
+
+  // Generate and cache
+  const { buffer, contentType } = await generateAudio(text);
+  const ext = contentType === 'audio/mpeg' ? '.mp3' : '.wav';
+  const cachePath = path.join(cacheDir, `email-briefing-${hash}${ext}`);
+  await fs.writeFile(cachePath, buffer);
+
+  return { buffer, contentType };
+}

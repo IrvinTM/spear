@@ -158,8 +158,8 @@ export function DashboardClient({
 
   return (
     <>
-      {/* Character — full screen, center stage */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
+      {/* Character — centered within the main content area (accounting for sidebar), resting above bottom bar */}
+      <div className="fixed top-0 bottom-20 left-60 right-0 max-md:left-0 z-0 pointer-events-none">
         <CharacterViewer
           characterUrl={`/api/characters/${activeCharacter}`}
           animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { getAgentHome } from '@/lib/config';
 
 const CHARACTERS_DIR = () => path.join(getAgentHome(), 'data', 'characters');
-const DEFAULT_CHARACTER = 'cosmic-dweller.vrm';
+const DEFAULT_CHARACTER = 'default_character.glb';
 
 export async function getCharactersDir(): Promise<string> {
   const dir = CHARACTERS_DIR();
@@ -14,7 +14,10 @@ export async function getCharactersDir(): Promise<string> {
 export async function listCharacters(): Promise<string[]> {
   const dir = await getCharactersDir();
   const files = await fs.readdir(dir);
-  return files.filter(f => f.endsWith('.vrm') || f.endsWith('.glb'));
+  const bundledDir = path.join(process.cwd(), 'public', 'defaults');
+  const bundledFiles = await fs.readdir(bundledDir).catch(() => []);
+  const allFiles = Array.from(new Set([...files, ...bundledFiles]));
+  return allFiles.filter(f => f.endsWith('.vrm') || f.endsWith('.glb'));
 }
 
 export async function getActiveCharacter(): Promise<string> {

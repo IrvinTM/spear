@@ -3,6 +3,8 @@
 import { useState, useCallback } from 'react';
 import { CopilotChat } from '@/components/CopilotChat';
 import { SyncBriefing } from '@/components/SyncBriefing';
+import { EmailBriefing } from '@/components/EmailBriefing';
+import { CalendarWidget } from '@/components/CalendarWidget';
 import { LiveActivity } from '@/components/LiveActivity';
 import { playSyncStartCue, playSyncDoneCue, playErrorCue } from '@/lib/client/audio-cues';
 
@@ -26,10 +28,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <>
       {children}
 
-      {/* Left side: Briefing panel */}
+      {/* Left side: Briefing panels */}
       <div className="fixed bottom-20 left-[calc(15rem+1.5rem)] z-40 w-[300px] max-lg:left-6 max-lg:w-[280px]">
         <div className="flex flex-col gap-2">
+          <CalendarWidget />
           <SyncBriefing expanded={briefingExpanded} />
+          <EmailBriefing expanded={briefingExpanded} />
           <button
             onClick={() => setBriefingExpanded((v) => !v)}
             className="self-end text-xs text-stone-500 hover:text-stone-300 transition-colors cursor-pointer px-1"
