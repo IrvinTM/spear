@@ -7,11 +7,13 @@ import { EmailBriefing } from '@/components/EmailBriefing';
 import { CalendarWidget } from '@/components/CalendarWidget';
 import { LiveActivity } from '@/components/LiveActivity';
 import { playSyncStartCue, playSyncDoneCue, playErrorCue } from '@/lib/client/audio-cues';
+import { useSidebar } from '@/components/SidebarContext';
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [chatExpanded, setChatExpanded] = useState(false);
   const [briefingExpanded, setBriefingExpanded] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const { collapsed } = useSidebar();
 
   const handleSyncEvent = useCallback((type: 'started' | 'completed' | 'failed') => {
     if (type === 'started') {
@@ -29,7 +31,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {children}
 
       {/* Left side: Briefing panels */}
-      <div className="fixed bottom-20 left-[calc(15rem+1.5rem)] z-40 w-[300px] max-lg:left-6 max-lg:w-[280px]">
+      <div className={`fixed bottom-20 z-40 w-[300px] transition-all duration-300 max-lg:left-6 max-lg:w-[280px] ${collapsed ? 'left-6' : 'left-[calc(15rem+1.5rem)]'}`}>
         <div className="flex flex-col gap-2">
           <CalendarWidget />
           <SyncBriefing expanded={briefingExpanded} />

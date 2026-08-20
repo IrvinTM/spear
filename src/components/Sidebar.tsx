@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSidebar } from './SidebarContext';
 
 const navItems = [
   { href: '/', label: 'Todos', icon: '📋' },
@@ -17,14 +18,18 @@ const inactiveClass =
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { collapsed, toggle } = useSidebar();
 
   return (
-    <aside className="w-60 h-screen fixed top-0 left-0 bg-stone-900/80 backdrop-blur-md border-r border-white/[0.06] flex flex-col p-6 z-50 max-md:hidden">
+    <aside className={`w-60 h-screen fixed top-0 left-0 bg-stone-900/80 backdrop-blur-md border-r border-white/[0.06] flex flex-col p-6 z-50 max-md:hidden transition-transform duration-300 ${collapsed ? '-translate-x-full' : 'translate-x-0'}`}>
       <div className="flex items-center gap-3 px-3 mb-8">
         <div className="w-7 h-7 rounded-md bg-accent-600 flex items-center justify-center text-sm font-bold text-white">
           C
         </div>
-        <span className="text-base font-semibold tracking-tight">Spear</span>
+        <span className="text-base font-semibold tracking-tight flex-1">Spear</span>
+        <button onClick={toggle} className="w-8 h-8 flex items-center justify-center rounded text-stone-500 hover:text-stone-200 hover:bg-white/[0.06] transition-colors cursor-pointer">
+          ❮
+        </button>
       </div>
 
       <nav className="flex flex-col gap-1 flex-1">

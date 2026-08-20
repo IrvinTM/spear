@@ -12,6 +12,7 @@ import {
   createSessionAction,
 } from './actions';
 import type { SyncStatus, TodoItem } from '@/lib/types';
+import { useSidebar } from '@/components/SidebarContext';
 
 function formatRelativeDate(dateStr: string | null): string {
   if (!dateStr) return 'Never';
@@ -155,11 +156,12 @@ export function DashboardClient({
 
   const activeTodos = todos.filter((t) => t.status !== 'done');
   const [todosExpanded, setTodosExpanded] = useState(false);
+  const { collapsed } = useSidebar();
 
   return (
     <>
       {/* Character — centered within the main content area (accounting for sidebar), resting above bottom bar */}
-      <div className="fixed top-0 bottom-20 left-60 right-0 max-md:left-0 z-0 pointer-events-none">
+      <div className={`fixed top-0 bottom-20 right-0 max-md:left-0 z-0 pointer-events-none transition-all duration-300 ${collapsed ? 'left-0' : 'left-60'}`}>
         <CharacterViewer
           characterUrl={`/api/characters/${activeCharacter}`}
           animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
@@ -177,7 +179,7 @@ export function DashboardClient({
       )}
 
       {/* Bottom bar — todos + sync, pinned to bottom */}
-      <div className="fixed bottom-0 left-60 right-0 z-20 max-md:left-0 pointer-events-none">
+      <div className={`fixed bottom-0 right-0 z-20 max-md:left-0 pointer-events-none transition-all duration-300 ${collapsed ? 'left-0' : 'left-60'}`}>
         {/* Expandable todo list */}
         {todosExpanded && activeTodos.length > 0 && (
           <div className="pointer-events-auto mx-6 mb-2 max-h-[50vh] overflow-y-auto rounded-xl bg-stone-950/90 backdrop-blur-sm border border-white/[0.06] shadow-2xl">

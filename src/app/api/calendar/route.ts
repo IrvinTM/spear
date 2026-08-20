@@ -13,31 +13,83 @@ export async function GET() {
     const events = await ical.async.fromURL(settings.calendarUrl);
     
     const now = new Date();
-    // We want the next upcoming event that hasn't finished yet
-    // Or hasn't started yet. Let's find events that end in the future, sort by start time.
-    const upcomingEvents = Object.values(events)
-      .filter((e: any) => e && e.type === 'VEVENT')
-      .map((e: any) => ({
-        summary: e.summary,
-        start: new Date(e.start),
-        end: new Date(e.end),
-        location: e.location
-      }))
-      .filter(e => e.end > now)
-      .sort((a, b) => a.start.getTime() - b.start.getTime());
+    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+    let upcomingEvents: any[] = [];
 
-    if (upcomingEvents.length === 0) {
-      return NextResponse.json({ hasCalendar: true, nextClass: null });
+    Object.values(events).forEach((e: any) => {
+      if (e && e.type === 'VEVENT') {
+        // Ignore all-day events (like birthdays or reminders)
+        if (e.start && e.start.dateOnly) {
+          return;
+        }
+
+        const summary = e.summary || '';
+
+        let duration = e.end ? e.end.getTime() - e.start.getTime() : 60 * 60 * 1000;
+        
+        // Fix for erroneous ICS exports where the end date is off by multiple days
+        if (duration > 24 * 60 * 60 * 1000) {
+          duration = duration % (24 * 60 * 60 * 1000);
+          if (duration === 0) duration = 60 * 60 * 1000; // fallback to 1 hour
+        }
+
+        if (e.rrule) {
+          // Get occurrences from slightly before 'now' to ensure ongoing events are caught
+          const dates = e.rrule.between(new Date(now.getTime() - duration - 1000), nextWeek);
+          dates.forEach((date: any) => {
+            upcomingEvents.push({
+              summary: summary,
+              start: new Date(date),
+              end: new Date(date.getTime() + duration),
+              location: e.location || ''
+            });
+          });
+        } else {
+          upcomingEvents.push({
+            summary: summary,
+            start: new Date(e.start),
+            end: new Date(e.end ? e.start.getTime() + duration : e.start.getTime() + duration),
+            location: e.location || ''
+          });
+        }
+      }
+    });
+
+    upcomingEvents = upcomingEvents
+      .filter((e: any) => e.end > now)
+      .sort((a: any, b: any) => a.start.getTime() - b.start.getTime());
+
+    let ongoingClass = null;
+    let nextClass = null;
+
+    for (const e of upcomingEvents) {
+      if (e.start <= now && e.end > now) {
+        if (!ongoingClass) ongoingClass = e;
+      } else if (e.start > now) {
+        if (!nextClass) nextClass = e;
+      }
+      if (ongoingClass && nextClass) break;
+    }
+
+    if (!ongoingClass && !nextClass) {
+      return NextResponse.json({ hasCalendar: true, ongoingClass: null, nextClass: null });
     }
 
     return NextResponse.json({
       hasCalendar: true,
-      nextClass: {
-        summary: upcomingEvents[0].summary,
-        start: upcomingEvents[0].start.toISOString(),
-        end: upcomingEvents[0].end.toISOString(),
-        location: upcomingEvents[0].location
-      }
+      ongoingClass: ongoingClass ? {
+        summary: ongoingClass.summary,
+        start: ongoingClass.start.toISOString(),
+        end: ongoingClass.end.toISOString(),
+        location: ongoingClass.location
+      } : null,
+      nextClass: nextClass ? {
+        summary: nextClass.summary,
+        start: nextClass.start.toISOString(),
+        end: nextClass.end.toISOString(),
+        location: nextClass.location
+      } : null
     });
   } catch (error) {
     console.error('Calendar API Error:', error);
