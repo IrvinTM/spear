@@ -67,7 +67,7 @@ const urgencyColors = {
 
 const statusConfig = {
   pending: { label: 'Pending', bg: 'bg-stone-700/50', text: 'text-stone-300', dot: 'bg-stone-400' },
-  in_progress: { label: 'In progress', bg: 'bg-accent-500/10', text: 'text-accent-400', dot: 'bg-accent-400' },
+  in_progress: { label: 'In progress', bg: 'bg-pale-700/30', text: 'text-pale-300', dot: 'bg-pale-400' },
   done: { label: 'Done', bg: 'bg-success/10', text: 'text-success', dot: 'bg-success' },
 };
 
@@ -182,8 +182,8 @@ export function DashboardClient({
       <div className={`fixed bottom-0 right-0 z-20 max-md:left-0 pointer-events-none transition-all duration-300 ${collapsed ? 'left-0' : 'left-60'}`}>
         {/* Expandable todo list */}
         {todosExpanded && activeTodos.length > 0 && (
-          <div className="pointer-events-auto mx-6 mb-2 max-h-[50vh] overflow-y-auto rounded-xl bg-stone-950/90 backdrop-blur-sm border border-white/[0.06] shadow-2xl">
-            <div className="flex flex-col divide-y divide-white/[0.04]">
+          <div className="pointer-events-auto mx-6 mb-2 max-h-[50vh] overflow-y-auto cyber-glass rounded-xl shadow-2xl">
+            <div className="flex flex-col divide-y divide-accent-500/10">
               {activeTodos.map((todo) => {
                 const due = formatDueDate(todo.dueDate);
                 const cfg = statusConfig[todo.status as keyof typeof statusConfig] || statusConfig.pending;
@@ -192,10 +192,10 @@ export function DashboardClient({
                     <button
                       onClick={() => handleStatusChange(todo.id, todo.status === 'pending' ? 'in_progress' : 'done')}
                       className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 cursor-pointer hover:scale-110 transition-all ${
-                        todo.status === 'in_progress' ? 'border-accent-400 bg-accent-400/20' : 'border-stone-600 hover:border-stone-400'
+                        todo.status === 'in_progress' ? 'border-pale-400 bg-pale-600/30' : 'border-stone-600 hover:border-stone-400'
                       }`}
                     >
-                      {todo.status === 'in_progress' && <span className="w-1.5 h-1.5 rounded-full bg-accent-400" />}
+                      {todo.status === 'in_progress' && <span className="w-1.5 h-1.5 rounded-full bg-pale-400" />}
                     </button>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-stone-200 truncate">{todo.title}</p>
@@ -214,7 +214,7 @@ export function DashboardClient({
         )}
 
         {/* Compact status bar */}
-        <div className="pointer-events-auto mx-6 mb-6 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-stone-950/80 backdrop-blur-sm border border-white/[0.06] shadow-lg">
+        <div className="pointer-events-auto mx-6 mb-6 flex items-center gap-3 px-4 py-2.5 cyber-glass rounded-xl shadow-lg">
           {/* Sync status dot + text */}
           <div className="flex items-center gap-2 text-xs text-stone-500">
             {syncStatus.status !== 'never' && (
@@ -241,7 +241,7 @@ export function DashboardClient({
             onClick={() => setTodosExpanded((v) => !v)}
             className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-200 transition-colors cursor-pointer ml-auto"
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${activeTodos.length > 0 ? 'bg-accent-400' : 'bg-stone-600'}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${activeTodos.length > 0 ? 'bg-pale-400' : 'bg-stone-600'}`} />
             {activeTodos.length} todo{activeTodos.length !== 1 ? 's' : ''}
             <span className="text-stone-600">{todosExpanded ? '▼' : '▲'}</span>
           </button>
@@ -250,7 +250,7 @@ export function DashboardClient({
           <button
             onClick={handleSync}
             disabled={isSyncing}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-600 text-white text-xs font-medium border border-accent-700 hover:bg-accent-500 active:bg-accent-700 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-pale-800 text-pale-300 text-xs font-medium border border-pale-600/40 hover:bg-pale-700 active:bg-pale-900 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             {isSyncing ? <><span className="spinner spinner--sm" /> Syncing</> : 'Sync'}
           </button>

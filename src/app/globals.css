@@ -18,7 +18,7 @@
   --color-stone-900: #1c1917;
   --color-stone-950: #0c0a09;
 
-  /* Accent — teal */
+  /* Accent — teal (used for glass glows & indicators) */
   --color-accent-50: #f0fdfa;
   --color-accent-100: #ccfbf1;
   --color-accent-200: #99f6e4;
@@ -29,6 +29,15 @@
   --color-accent-700: #0f766e;
   --color-accent-800: #115e59;
   --color-accent-900: #134e4a;
+
+  /* Palenight — buttons & interactive surfaces */
+  --color-pale-300: #A6ACCD;
+  --color-pale-400: #8087A2;
+  --color-pale-500: #697098;
+  --color-pale-600: #4E5579;
+  --color-pale-700: #3C435E;
+  --color-pale-800: #292D3E;
+  --color-pale-900: #1B1E2B;
 
   /* Status colors */
   --color-success: #22c55e;
@@ -128,6 +137,18 @@
   }
   .step-dot--pending {
     @apply bg-stone-700 text-stone-500 border border-stone-600;
+  }
+
+  /* Cyberpunk glass panel */
+  .cyber-glass {
+    background: rgba(12, 10, 9, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(20, 184, 166, 0.15);
+    box-shadow:
+      0 0 20px rgba(20, 184, 166, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 -1px 0 rgba(20, 184, 166, 0.05);
   }
 
   /* Glow shadow for primary buttons */

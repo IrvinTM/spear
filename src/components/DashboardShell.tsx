@@ -51,9 +51,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           chatExpanded ? 'h-[500px]' : 'h-auto'
         }`}
       >
-        <div className={`bg-stone-900 border border-white/[0.08] rounded-xl shadow-2xl overflow-hidden flex flex-col ${chatExpanded ? 'h-full' : ''}`}>
+        <div className={`cyber-glass rounded-xl shadow-2xl overflow-hidden flex flex-col ${chatExpanded ? 'h-full' : ''}`}>
           {/* Expand toggle */}
-          <div className="flex items-center justify-end px-3 py-1.5 border-b border-white/[0.06] bg-stone-950/40">
+          <div className="flex items-center justify-end px-3 py-1.5 border-b border-accent-500/10 bg-stone-950/40">
             <button
               onClick={() => setChatExpanded((v) => !v)}
               className="text-xs text-stone-500 hover:text-stone-300 transition-colors cursor-pointer flex items-center gap-1"
@@ -69,17 +69,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       {/* Activity floating panel */}
       <div
-        className={`fixed bottom-20 right-[calc(380px+3rem)] z-40 w-[400px] max-lg:right-6 max-lg:bottom-[calc(4rem+60px)] rounded-xl border border-white/[0.08] bg-stone-900 shadow-2xl overflow-hidden transition-all duration-300 ${
+        className={`fixed bottom-20 right-[calc(380px+3rem)] z-40 w-[400px] max-lg:right-6 max-lg:bottom-[calc(4rem+60px)] cyber-glass rounded-xl shadow-2xl overflow-hidden transition-all duration-300 ${
           activityOpen
             ? 'opacity-100 pointer-events-auto translate-y-0 scale-100'
             : 'opacity-0 pointer-events-none translate-y-4 scale-95'
         }`}
         style={{ height: '350px' }}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-stone-950/60">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-accent-500/10 bg-stone-950/60">
           <div className="flex items-center gap-2">
             <span>📡</span>
-            <h3 className="text-sm font-semibold text-stone-200">Activity</h3>
+            <h3 className="text-sm font-semibold text-stone-100">Activity</h3>
           </div>
           <button
             onClick={() => setActivityOpen(false)}
@@ -98,8 +98,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         onClick={() => setActivityOpen((v) => !v)}
         className={`fixed bottom-6 right-[calc(380px+3rem)] max-lg:right-6 max-lg:bottom-[calc(4rem+60px)] z-50 w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-lg border transition-all cursor-pointer hover:-translate-y-0.5 ${
           activityOpen
-            ? 'bg-accent-600 border-accent-700 shadow-glow'
-            : 'bg-stone-800 border-white/[0.08] hover:bg-stone-700'
+            ? 'bg-pale-700 border-pale-600 shadow-[0_0_15px_rgba(166,172,205,0.15)]'
+            : 'bg-stone-950/60 backdrop-blur-xl border-pale-700/40 hover:bg-pale-800/60 hover:border-pale-500/40 hover:shadow-[0_0_12px_rgba(166,172,205,0.1)]'
         } ${activityOpen ? 'opacity-0 pointer-events-none' : ''}`}
         title="Activity"
       >

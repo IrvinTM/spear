@@ -31,7 +31,7 @@ function buildSummaryPrompt(diff: SyncDiff, activeTodos: { title: string; dueDat
     }
   }
 
-  return `Eres Campus Copilot. Debes dar un reporte de estado al estudiante.
+  return `Eres Spear, un asistente de campus virtual. Debes dar un reporte de estado al estudiante.
 A continuación los datos:
 
 ${parts.join('\n')}

@@ -63,22 +63,23 @@ export function SyncBriefing({ expanded = true }: { expanded?: boolean }) {
   };
 
   return (
-    <div className="bg-stone-900 border border-white/[0.06] rounded-xl p-4 shadow-sm animate-fade-in">
+    <div className="cyber-glass rounded-xl p-4 animate-fade-in relative overflow-hidden">
+      <div className="absolute bottom-0 right-0 w-20 h-20 bg-accent-400/5 rounded-tl-full blur-2xl pointer-events-none" />
       {/* Play controls — always visible */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 relative z-10">
         <button
           onClick={handleListen}
           disabled={isAudioLoading}
           className={`w-10 h-10 rounded-full flex items-center justify-center text-lg border-2 transition-all cursor-pointer shrink-0 ${
             isPlaying
-              ? 'border-accent-400 bg-accent-400/10 shadow-[0_0_12px_rgba(var(--accent-500),0.3)]'
-              : 'border-stone-600 bg-stone-800 hover:border-stone-400'
+              ? 'border-pale-400 bg-pale-600/20 shadow-[0_0_12px_rgba(166,172,205,0.25)]'
+              : 'border-pale-600/40 bg-stone-950/60 hover:border-pale-400/50'
           } disabled:opacity-40`}
         >
           {isAudioLoading ? <span className="spinner spinner--sm" /> : isPlaying ? '⏸' : '🔊'}
         </button>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold text-stone-200">Briefing</h3>
+          <h3 className="text-sm font-semibold text-stone-100">Briefing</h3>
           <p className="text-xs text-stone-500 truncate" suppressHydrationWarning>
             {isPlaying ? 'Playing...' : isAudioLoading ? 'Loading audio...' : data.createdAt ? new Date(data.createdAt).toLocaleString() : 'Ready'}
           </p>
@@ -87,24 +88,24 @@ export function SyncBriefing({ expanded = true }: { expanded?: boolean }) {
 
       {/* Expanded content */}
       {expanded && (
-        <div className="mt-4 pt-4 border-t border-white/[0.06]">
+        <div className="mt-4 pt-4 border-t border-accent-500/10 relative z-10">
           <p className="text-sm text-stone-300 leading-relaxed mb-4">
             {data.summaryText || 'Generating summary...'}
           </p>
 
           <div className="flex flex-wrap gap-2">
             {(data.diff?.newAssignments?.length ?? 0) > 0 && (
-              <span className="text-xs px-2 py-1 rounded-full bg-warning/10 text-warning">
+              <span className="text-xs px-2 py-1 rounded-full bg-warning/10 text-warning border border-warning/20">
                 {data.diff!.newAssignments.length} new assignment{data.diff!.newAssignments.length > 1 ? 's' : ''}
               </span>
             )}
             {(data.diff?.newMaterials?.length ?? 0) > 0 && (
-              <span className="text-xs px-2 py-1 rounded-full bg-accent-500/10 text-accent-400">
+              <span className="text-xs px-2 py-1 rounded-full bg-pale-700/30 text-pale-300 border border-pale-600/30">
                 {data.diff!.newMaterials.length} new material{data.diff!.newMaterials.length > 1 ? 's' : ''}
               </span>
             )}
             {(data.diff?.filesDownloaded?.length ?? 0) > 0 && (
-              <span className="text-xs px-2 py-1 rounded-full bg-success/10 text-success">
+              <span className="text-xs px-2 py-1 rounded-full bg-success/10 text-success border border-success/20">
                 {data.diff!.filesDownloaded.length} file{data.diff!.filesDownloaded.length > 1 ? 's' : ''} downloaded
               </span>
             )}

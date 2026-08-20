@@ -146,19 +146,19 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
   const statusText = isTalking ? 'Hablando...' : isAudioLoading ? 'Preparando voz...' : isLoading ? 'Pensando...' : 'En línea';
 
   return (
-    <div className="bg-stone-900 flex flex-col h-full overflow-hidden">
+    <div className="bg-transparent flex flex-col h-full overflow-hidden">
       {expanded && (
         <>
           {/* Header */}
-          <div className="p-4 border-b border-white/[0.06] flex items-center gap-4 bg-stone-950/50">
-            <div className={`relative w-12 h-12 rounded-full overflow-hidden border-2 flex-shrink-0 bg-stone-800 transition-colors duration-300 ${isTalking ? 'border-accent-400 shadow-[0_0_15px_rgba(var(--accent-500),0.5)]' : 'border-stone-600'}`}>
+          <div className="p-4 border-b border-accent-500/10 flex items-center gap-4 bg-stone-950/40">
+            <div className={`relative w-12 h-12 rounded-full overflow-hidden border-2 flex-shrink-0 bg-stone-950/60 transition-colors duration-300 ${isTalking ? 'border-pale-400 shadow-[0_0_15px_rgba(166,172,205,0.3)]' : 'border-pale-600/40'}`}>
               <div className="absolute inset-0 flex items-center justify-center text-2xl">
                 {isTalking ? <span className="animate-pulse">🗣️</span> : <span>🤖</span>}
               </div>
             </div>
             <div>
-              <h2 className="font-semibold text-stone-200 text-sm">Campus Copilot</h2>
-              <p className="text-xs text-accent-400 font-medium">{statusText}</p>
+              <h2 className="font-semibold text-stone-100 text-sm">Assistant Chat</h2>
+              <p className="text-xs text-pale-400 font-medium">{statusText}</p>
             </div>
           </div>
 
@@ -169,8 +169,8 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
                 key={i}
                 className={`max-w-[80%] rounded-xl p-3 text-sm leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-accent-600 text-white self-end rounded-br-none'
-                    : 'bg-stone-800 text-stone-200 self-start rounded-bl-none border border-white/[0.04]'
+                    ? 'bg-pale-800/80 text-pale-300 self-end rounded-br-none border border-pale-600/30'
+                    : 'bg-stone-950/60 text-stone-200 self-start rounded-bl-none border border-pale-700/40'
                 }`}
               >
                 {msg.content}
@@ -181,7 +181,7 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
                       disabled={isAudioLoading && playingIndex !== i}
                       className={`w-6 h-6 flex items-center justify-center rounded-full transition-colors cursor-pointer disabled:opacity-40 ${
                         playingIndex === i
-                          ? 'text-accent-400 bg-accent-400/10'
+                          ? 'text-pale-300 bg-pale-600/20'
                           : 'text-stone-500 hover:text-stone-300 hover:bg-white/[0.04]'
                       }`}
                       title={playingIndex === i ? 'Pausar' : 'Reproducir'}
@@ -208,9 +208,9 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
       )}
 
       {/* Input bar — always visible */}
-      <form onSubmit={handleSend} className={`p-3 bg-stone-950/50 ${expanded ? 'border-t border-white/[0.06]' : ''} flex gap-2 items-center`}>
+      <form onSubmit={handleSend} className={`p-3 bg-stone-950/40 ${expanded ? 'border-t border-accent-500/10' : ''} flex gap-2 items-center`}>
         {!expanded && (
-          <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-base border-2 transition-colors ${isTalking || isLoading ? 'border-accent-400 bg-accent-400/10' : 'border-stone-700 bg-stone-800'}`}>
+          <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-base border-2 transition-colors ${isTalking || isLoading ? 'border-pale-400 bg-pale-600/20' : 'border-pale-600/40 bg-stone-950/60'}`}>
             {isTalking ? <span className="animate-pulse text-sm">🗣️</span> : isLoading ? <span className="spinner spinner--sm" /> : <span className="text-sm">🤖</span>}
           </div>
         )}
@@ -219,13 +219,13 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={expanded ? 'Pregúntame algo sobre tus cursos...' : 'Pregúntale al Copilot...'}
-          className="flex-1 bg-stone-900 border border-white/[0.06] rounded-lg px-4 py-2 text-sm text-stone-200 focus:outline-none focus:border-accent-500 transition-colors"
+          className="flex-1 bg-stone-950/60 border border-pale-700/40 rounded-lg px-4 py-2 text-sm text-stone-200 focus:outline-none focus:border-pale-500/50 focus:shadow-[0_0_8px_rgba(166,172,205,0.1)] transition-all"
           disabled={isLoading}
         />
         <button
           type="submit"
           disabled={isLoading || !input.trim()}
-          className="bg-accent-600 hover:bg-accent-500 disabled:opacity-50 disabled:hover:bg-accent-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors cursor-pointer"
+          className="bg-pale-800 hover:bg-pale-700 disabled:opacity-50 disabled:hover:bg-pale-800 text-pale-300 px-4 py-2 rounded-lg font-medium text-sm transition-colors cursor-pointer border border-pale-600/40"
         >
           Enviar
         </button>
