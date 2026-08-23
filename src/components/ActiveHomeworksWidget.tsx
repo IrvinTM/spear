@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getTodos, updateTodoStatus } from '@/app/(dashboard)/dashboard/actions';
 import type { TodoItem } from '@/lib/types';
 
@@ -45,19 +45,25 @@ const statusConfig = {
 export function ActiveHomeworksWidget() {
   const [todos, setTodos] = useState<TodoItem[]>([]);
 
-  const loadTodos = useCallback(async () => {
-    const activeTodos = await getTodos();
-    setTodos(activeTodos.filter((todo) => todo.status !== 'done'));
-  }, []);
-
   useEffect(() => {
-    loadTodos();
+    let cancelled = false;
+    const loadTodos = async () => {
+      const activeTodos = await getTodos();
+      if (!cancelled) {
+        setTodos(activeTodos.filter((todo) => todo.status !== 'done'));
+      }
+    };
+
+    void loadTodos();
     const refresh = () => {
-      loadTodos();
+      void loadTodos();
     };
     window.addEventListener('todos:refresh', refresh);
-    return () => window.removeEventListener('todos:refresh', refresh);
-  }, [loadTodos]);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('todos:refresh', refresh);
+    };
+  }, []);
 
   const handleStatusChange = (todoId: number, status: 'pending' | 'in_progress' | 'done') => {
     setTodos((prev) =>
