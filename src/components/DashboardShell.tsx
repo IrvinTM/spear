@@ -5,6 +5,7 @@ import { CopilotChat } from '@/components/CopilotChat';
 import { SyncBriefing } from '@/components/SyncBriefing';
 import { EmailBriefing } from '@/components/EmailBriefing';
 import { CalendarWidget } from '@/components/CalendarWidget';
+import { ActiveHomeworksWidget } from '@/components/ActiveHomeworksWidget';
 import { LiveActivity } from '@/components/LiveActivity';
 import { playSyncStartCue, playSyncDoneCue, playErrorCue } from '@/lib/client/audio-cues';
 import { useSidebar } from '@/components/SidebarContext';
@@ -34,6 +35,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <div className={`fixed bottom-20 z-40 w-[300px] transition-all duration-300 max-lg:left-6 max-lg:w-[280px] ${collapsed ? 'left-6' : 'left-[calc(15rem+1.5rem)]'}`}>
         <div className="flex flex-col gap-2">
           <CalendarWidget />
+          <ActiveHomeworksWidget />
           <SyncBriefing expanded={briefingExpanded} />
           <EmailBriefing expanded={briefingExpanded} />
           <button
