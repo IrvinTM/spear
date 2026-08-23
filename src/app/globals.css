@@ -50,8 +50,8 @@
   --color-info-muted: #1e40af;
 
   /* Fonts */
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: var(--font-jetbrains-mono), 'Fira Code', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Animations */
   --animate-fade-in: fade-in 0.4s ease both;
