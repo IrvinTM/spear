@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation';
 import { useSidebar } from './SidebarContext';
 
 const navItems = [
-  { href: '/', label: 'Todos', icon: '📋' },
+  { href: '/', label: 'Todo', icon: '📋' },
+  { href: '/assignments', label: 'Assignments', icon: '📝' },
   { href: '/materials', label: 'Materials', icon: '📚' },
   { href: '/email', label: 'Email', icon: '✉️' },
   { href: '/logs', label: 'Logs', icon: '📜' },

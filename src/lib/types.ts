@@ -15,6 +15,7 @@ export interface TodoItem {
   dueDate: string | null;
   status: string;
   courseName?: string;
+  draftStatus?: string | null;
 }
 
 export interface EmailItem {

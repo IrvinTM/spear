@@ -77,7 +77,8 @@ export async function getTodos(): Promise<TodoItem[]> {
             WHERE a.id = t.source_id
           )
           ELSE NULL
-        END as courseName
+        END as courseName,
+        (SELECT status FROM agent_runs WHERE todo_id = t.id ORDER BY id DESC LIMIT 1) as draftStatus
       FROM todos t
       WHERE t.status != 'done'
       ORDER BY
@@ -149,4 +150,98 @@ export async function triggerMoodleSync(
       error: err instanceof Error ? err.message : 'Sync failed.',
     };
   }
+}
+
+/**
+ * Starts a background draft generation for a given todo.
+ */
+export async function startDraftGeneration(todoId: number, force: boolean = false) {
+  const { getDb } = await import('@/lib/db');
+  const db = getDb();
+  
+  if (!force) {
+    const existing = db.prepare('SELECT id, status FROM agent_runs WHERE todo_id = ? ORDER BY id DESC LIMIT 1').get(todoId) as any;
+    if (existing && (existing.status === 'running' || existing.status === 'completed')) {
+      return { success: true, runId: existing.id };
+    }
+  }
+  
+  const result = db.prepare(`
+    INSERT INTO agent_runs (todo_id, status, model_used, created_at)
+    VALUES (?, 'running', 'gemini-3.1-pro-high', datetime('now'))
+  `).run(todoId);
+  const runId = Number(result.lastInsertRowid);
+  
+  // kick off async process (local node process will keep running it)
+  generateDraftBackground(todoId, runId).catch(console.error);
+  
+  return { success: true, runId };
+}
+
+async function generateDraftBackground(todoId: number, runId: number) {
+  const { getDb } = await import('@/lib/db');
+  const db = getDb();
+  const startTime = Date.now();
+  try {
+    const { buildContextPack } = await import('@/lib/agent/runner');
+    const { generateText } = await import('@/lib/llm');
+    const context = await buildContextPack(todoId);
+    
+    if (!context) throw new Error('Context not found');
+    
+    const cleanIntro = context.assignmentIntro.replace(/<[^>]*>?/gm, '');
+
+    const prompt = `
+You are an expert academic assistant helping a university student at the Universidad de El Salvador (UES) complete their assignment.
+
+Your task is to FULLY RESOLVE AND COMPLETE the assignment below — produce a final, submission-ready answer that the student can review and submit.
+Do NOT just suggest what to do, outline steps, or say "you should consider...". Write the actual complete answer, content, analysis, or document that the assignment requires.
+
+Course: ${context.courseName}
+Assignment Name: ${context.assignmentName}
+
+Assignment Instructions:
+${cleanIntro}
+
+Guidelines:
+- Read all relevant files in the materials directory for context and source material.
+- Write the complete assignment response as if you are the student submitting it.
+- Use clear, formal academic Spanish (this is a Spanish-language university).
+- Structure the output properly for the type of assignment (essay, report, analysis, etc.).
+- Be thorough and detailed — this is a real graded submission.
+- If specific data, dates, or information is missing from the materials, make reasonable academic assumptions and note them briefly.
+
+The directory ${context.materialsDirectory} contains reference files from Moodle for this course. Use them as source material.
+`;
+
+
+    const draft = await generateText(prompt, {
+      model: 'gemini-3.1-pro-high',
+      timeout: 300000,
+      additionalDirectories: [context.materialsDirectory],
+    });
+    
+    db.prepare(`
+      UPDATE agent_runs 
+      SET status = 'completed', draft = ?, duration_ms = ?, completed_at = datetime('now')
+      WHERE id = ?
+    `).run(draft, Date.now() - startTime, runId);
+    
+  } catch (error: any) {
+    db.prepare(`
+      UPDATE agent_runs 
+      SET status = 'failed', error_message = ?, duration_ms = ?, completed_at = datetime('now')
+      WHERE id = ?
+    `).run(error.message, Date.now() - startTime, runId);
+  }
+}
+
+/**
+ * Gets the draft status for a given todo.
+ */
+export async function getDraftStatus(todoId: number) {
+  const { getDb } = await import('@/lib/db');
+  const db = getDb();
+  const run = db.prepare('SELECT id, status, draft, error_message FROM agent_runs WHERE todo_id = ? ORDER BY id DESC LIMIT 1').get(todoId) as any;
+  return run || null;
 }

@@ -68,9 +68,9 @@ The directory ${context.materialsDirectory} contains untrusted reference files s
 Format the output clearly using Markdown headings for the Outline and the Draft.
   `;
 
-  // We use a high-effort model for complex drafting
+  // We use the 3.1 pro model for accurate complex drafting
   const stream = streamText(prompt, {
-    model: 'gemini-3.6-flash-high', // High effort/context model
+    model: 'gemini-3.1-pro-high',
     timeout: 300000, // 5 minutes timeout for drafting
     additionalDirectories: [context.materialsDirectory],
   });

@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getTodos, updateTodoStatus } from '@/app/(dashboard)/dashboard/actions';
+import { useRouter } from 'next/navigation';
+import { getTodos, updateTodoStatus, startDraftGeneration } from '@/app/(dashboard)/dashboard/actions';
 import type { TodoItem } from '@/lib/types';
 
 function formatDueDate(dateStr: string | null): { label: string; urgency: 'overdue' | 'urgent' | 'soon' | 'normal' | 'none' } {
@@ -43,8 +44,10 @@ const statusConfig = {
 };
 
 export function ActiveHomeworksWidget() {
+  const router = useRouter();
   const [todos, setTodos] = useState<TodoItem[]>([]);
-
+  
+  // Polling for draft statuses
   useEffect(() => {
     let cancelled = false;
     const loadTodos = async () => {
@@ -55,15 +58,21 @@ export function ActiveHomeworksWidget() {
     };
 
     void loadTodos();
-    const refresh = () => {
-      void loadTodos();
-    };
+    const refresh = () => void loadTodos();
     window.addEventListener('todos:refresh', refresh);
+    
+    const interval = setInterval(() => {
+      if (todos.some(t => t.draftStatus === 'running')) {
+        void loadTodos();
+      }
+    }, 5000);
+    
     return () => {
       cancelled = true;
       window.removeEventListener('todos:refresh', refresh);
+      clearInterval(interval);
     };
-  }, []);
+  }, [todos]);
 
   const handleStatusChange = (todoId: number, status: 'pending' | 'in_progress' | 'done') => {
     setTodos((prev) =>
@@ -73,6 +82,11 @@ export function ActiveHomeworksWidget() {
     );
     updateTodoStatus(todoId, status);
     window.dispatchEvent(new CustomEvent('todos:refresh'));
+  };
+
+  const handleGenerateDraft = async (todoId: number) => {
+    setTodos((prev) => prev.map(t => t.id === todoId ? { ...t, draftStatus: 'running' } : t));
+    await startDraftGeneration(todoId);
   };
 
   return (
@@ -92,10 +106,10 @@ export function ActiveHomeworksWidget() {
               const due = formatDueDate(todo.dueDate);
               const cfg = statusConfig[todo.status as keyof typeof statusConfig] || statusConfig.pending;
               return (
-                <div key={todo.id} className="flex items-center gap-2 py-2.5">
+                <div key={todo.id} className="flex items-start gap-2 py-2.5">
                   <button
                     onClick={() => handleStatusChange(todo.id, todo.status === 'pending' ? 'in_progress' : 'done')}
-                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 cursor-pointer hover:scale-110 transition-all ${
+                    className={`w-4 h-4 mt-0.5 rounded-full border-2 flex items-center justify-center shrink-0 cursor-pointer hover:scale-110 transition-all ${
                       todo.status === 'in_progress' ? 'border-pale-400 bg-pale-600/30' : 'border-stone-600 hover:border-stone-400'
                     }`}
                   >
@@ -104,12 +118,37 @@ export function ActiveHomeworksWidget() {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-stone-200 truncate">{todo.title}</p>
                     {todo.courseName && <p className="text-[11px] text-stone-500 truncate">{todo.courseName}</p>}
+
+                    {/* Draft button below text, styled as a pill badge */}
+                    {todo.sourceType === 'assignment' && (
+                      <div className="mt-1">
+                        {todo.draftStatus === 'completed' ? (
+                          <button
+                            onClick={() => router.push('/assignments')}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-accent-500/20 text-accent-300 hover:bg-accent-500/30 transition-colors cursor-pointer"
+                          >
+                            <span className="w-1 h-1 rounded-full bg-accent-400" />
+                            Review Draft
+                          </button>
+                        ) : todo.draftStatus === 'running' ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-700/50 text-stone-400">
+                            <span className="w-1 h-1 rounded-full bg-pale-400 animate-pulse" />
+                            Drafting...
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleGenerateDraft(todo.id)}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-700/50 text-stone-300 hover:bg-stone-600/50 transition-colors cursor-pointer"
+                          >
+                            <span className="w-1 h-1 rounded-full bg-stone-400" />
+                            Draft Solution
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <span className={`hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium shrink-0 ${cfg.bg} ${cfg.text}`}>
-                    <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
-                    {cfg.label}
-                  </span>
-                  <span className={`text-[11px] shrink-0 ${urgencyColors[due.urgency]}`}>{due.label}</span>
+
+                  <span className={`text-[11px] shrink-0 mt-0.5 ${urgencyColors[due.urgency]}`}>{due.label}</span>
                 </div>
               );
             })}
