@@ -50,29 +50,32 @@ export function ActiveHomeworksWidget() {
   // Polling for draft statuses
   useEffect(() => {
     let cancelled = false;
+    let timeoutId: NodeJS.Timeout;
+
     const loadTodos = async () => {
       const activeTodos = await getTodos();
       if (!cancelled) {
         setTodos(activeTodos.filter((todo) => todo.status !== 'done'));
+        
+        if (activeTodos.some(t => t.draftStatus === 'running')) {
+          timeoutId = setTimeout(loadTodos, 5000);
+        }
       }
     };
 
     void loadTodos();
-    const refresh = () => void loadTodos();
+    const refresh = () => {
+      clearTimeout(timeoutId);
+      void loadTodos();
+    };
     window.addEventListener('todos:refresh', refresh);
-    
-    const interval = setInterval(() => {
-      if (todos.some(t => t.draftStatus === 'running')) {
-        void loadTodos();
-      }
-    }, 5000);
     
     return () => {
       cancelled = true;
       window.removeEventListener('todos:refresh', refresh);
-      clearInterval(interval);
+      clearTimeout(timeoutId);
     };
-  }, [todos]);
+  }, []);
 
   const handleStatusChange = (todoId: number, status: 'pending' | 'in_progress' | 'done') => {
     setTodos((prev) =>
