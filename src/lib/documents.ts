@@ -23,8 +23,21 @@ export async function extractTextFromImage(imagePath: string): Promise<string> {
 export async function extractTextFromPDF(pdfPath: string): Promise<string> {
   try {
     const dataBuffer = await readFile(pdfPath);
-    const data = await pdfParse(dataBuffer);
-    return data.text;
+    const uint8 = new Uint8Array(dataBuffer);
+    
+    // Handle different export structures of pdf-parse across versions
+    const pdfFunc = typeof pdfParse === 'function' ? pdfParse : (pdfParse.default || pdfParse);
+    
+    if (typeof pdfFunc === 'function') {
+      const data = await pdfFunc(dataBuffer);
+      return data.text;
+    } else if (pdfParse.PDFParse) {
+      const p = new pdfParse.PDFParse(uint8);
+      const data = await p.getText();
+      return data.text;
+    }
+    
+    throw new Error('Unsupported pdf-parse version');
   } catch (error) {
     console.error('PDF Parse Error:', error);
     throw new Error('Failed to extract text from PDF.');

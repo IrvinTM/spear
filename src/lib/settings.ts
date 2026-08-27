@@ -24,6 +24,7 @@ export interface AppSettings {
   talkingAnimation: string;
   background: string;
   calendarUrl: string;
+  hideCharacter?: boolean;
 }
 
 const DEFAULTS: AppSettings = {
@@ -48,6 +49,7 @@ const DEFAULTS: AppSettings = {
   talkingAnimation: 'talking_default.vrma',
   background: 'https://r4.wallpaperflare.com/wallpaper/781/587/704/blender-floating-particles-digital-art-hexagon-hd-wallpaper-08f6dd68b070bcc8e0fc715e7812249a.jpg',
   calendarUrl: '',
+  hideCharacter: false,
 };
 
 function getSettingsPath(): string {
@@ -74,6 +76,7 @@ export function getSettings(): AppSettings {
       talkingAnimation: saved.talkingAnimation || DEFAULTS.talkingAnimation,
       background: saved.background || DEFAULTS.background,
       calendarUrl: saved.calendarUrl || DEFAULTS.calendarUrl,
+      hideCharacter: saved.hideCharacter !== undefined ? saved.hideCharacter : DEFAULTS.hideCharacter,
       tts: { ...DEFAULTS.tts, ...saved.tts, piper: { ...DEFAULTS.tts.piper, ...saved.tts?.piper }, google: { ...DEFAULTS.tts.google, ...saved.tts?.google } } 
     };
   } catch {

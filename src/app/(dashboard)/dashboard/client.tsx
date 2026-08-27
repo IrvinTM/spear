@@ -40,12 +40,14 @@ export function DashboardClient({
   activeCharacter,
   activeAnimation,
   activeTalkingAnimation,
+  hideCharacter,
 }: {
   initialSyncStatus: SyncStatus;
   initialTodos: TodoItem[];
   activeCharacter: string;
   activeAnimation: string;
   activeTalkingAnimation: string;
+  hideCharacter: boolean;
 }) {
   const [syncStatus, setSyncStatus] = useState(initialSyncStatus);
   const [todos, setTodos] = useState(initialTodos);
@@ -113,15 +115,17 @@ export function DashboardClient({
   return (
     <>
       {/* Character — centered within the main content area (accounting for sidebar), resting above bottom bar */}
-      <div className={`fixed top-0 bottom-20 right-0 max-md:left-0 z-0 pointer-events-none transition-all duration-300 ${collapsed ? 'left-0' : 'left-60'}`}>
-        <CharacterViewer
-          characterUrl={`/api/characters/${activeCharacter}`}
-          animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
-          talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
-          pose={characterPose}
-          className="w-full h-full"
-        />
-      </div>
+      {!hideCharacter && (
+        <div className={`fixed top-0 bottom-20 right-0 max-md:left-0 z-0 pointer-events-none transition-all duration-300 ${collapsed ? 'left-0' : 'left-60'}`}>
+          <CharacterViewer
+            characterUrl={`/api/characters/${activeCharacter}`}
+            animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
+            talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
+            pose={characterPose}
+            className="w-full h-full"
+          />
+        </div>
+      )}
 
       {/* Sync error — top overlay */}
       {syncError && (

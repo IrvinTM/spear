@@ -372,7 +372,7 @@ async function syncAssignments(
         ? Number(result.lastInsertRowid)
         : (checkExisting.get(a.id) as { id: number }).id;
 
-      if (isNew && a.duedate && a.duedate * 1000 > Date.now()) {
+      if (!a.duedate || a.duedate * 1000 > Date.now()) {
         if (!checkTodoExists.get(localAssignmentId)) {
           insertTodo.run({
             title: a.name,

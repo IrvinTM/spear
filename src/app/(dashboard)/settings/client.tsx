@@ -29,7 +29,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
       .catch(() => {});
   }, []);
 
-  const update = (path: string, value: string) => {
+  const update = (path: string, value: string | boolean) => {
     setFeedback(null);
     setSettings((prev) => {
       const next = structuredClone(prev);
@@ -82,6 +82,18 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
           <p className="text-xs text-stone-500">
             Drop .vrm or .glb files into `~/.ues-agent/data/characters/` to add more.
           </p>
+        </div>
+
+        <div className="flex flex-col gap-2 mt-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={settings.hideCharacter || false}
+              onChange={(e) => update('hideCharacter', e.target.checked as any)}
+              className="w-4 h-4 rounded border-white/10 bg-stone-950 text-accent-500 focus:ring-accent-500/15 focus:ring-[3px] outline-none"
+            />
+            <span className={labelClass}>Hide Character</span>
+          </label>
         </div>
         
         <div className="flex flex-col gap-2 mt-4">

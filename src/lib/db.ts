@@ -90,7 +90,6 @@ export function getGlobalContext() {
     LEFT JOIN course_sections s ON s.id = m.section_id
     LEFT JOIN material_files mf ON mf.material_id = m.id
     ORDER BY c.fullname, sectionName, materialName
-    LIMIT 100
   `).all() as { courseName: string; sectionName: string; materialName: string; status: string | null }[];
   contextText += `\n### Materiales guardados:\n`;
   if (materials.length === 0) contextText += `No hay materiales descargados todavía.\n`;

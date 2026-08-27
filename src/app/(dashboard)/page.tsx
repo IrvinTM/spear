@@ -25,5 +25,6 @@ export default async function HomePage() {
     activeCharacter={settings.character} 
     activeAnimation={settings.animation}
     activeTalkingAnimation={settings.talkingAnimation}
+    hideCharacter={settings.hideCharacter || false}
   />;
 }
