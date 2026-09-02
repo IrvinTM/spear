@@ -76,13 +76,16 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
-      if (!res.ok) throw new Error('Audio fetch failed');
+      if (!res.ok) {
+        console.warn('Audio fetch failed, server returned', res.status);
+        return;
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       audioCacheRef.current.set(messageIndex, url);
       playAudioBlob(url, messageIndex);
     } catch (err) {
-      console.error('TTS Error:', err);
+      console.warn('TTS Error:', err);
     } finally {
       setIsAudioLoading(false);
     }

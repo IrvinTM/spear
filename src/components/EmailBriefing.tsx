@@ -37,7 +37,10 @@ export function EmailBriefing({ expanded = true }: { expanded?: boolean }) {
     try {
       const textParam = encodeURIComponent(data.audioText || data.summaryText || '');
       const res = await fetch(`/api/email/summary/audio?text=${textParam}&t=${Date.now()}`);
-      if (!res.ok) throw new Error('Audio unavailable');
+      if (!res.ok) {
+        console.warn('Audio unavailable, server returned', res.status);
+        return;
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
 
@@ -49,7 +52,7 @@ export function EmailBriefing({ expanded = true }: { expanded?: boolean }) {
       audio.onerror = () => { setIsPlaying(false); window.dispatchEvent(new CustomEvent('character-pose', { detail: 'idle' })); URL.revokeObjectURL(url); };
       audio.play();
     } catch (err) {
-      console.error('Email briefing audio error:', err);
+      console.warn('Email briefing audio error:', err);
     } finally {
       setIsAudioLoading(false);
     }
