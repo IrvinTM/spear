@@ -290,6 +290,105 @@ async function fetchCoursesScrape(
   return Array.from(new Map(courses.map((c) => [c.id, c])).values());
 }
 
+const SPANISH_MONTHS: Record<string, number> = {
+  enero: 0, febrero: 1, marzo: 2, abril: 3, mayo: 4, junio: 5,
+  julio: 6, agosto: 7, septiembre: 8, setiembre: 8, octubre: 9, noviembre: 10, diciembre: 11,
+};
+
+export function parseMoodleDateString(text: string): Date | null {
+  if (!text) return null;
+  const clean = text.toLowerCase().trim();
+  const m = clean.match(/(\d{1,2})\s+de\s+([a-z]+)\s+de\s+(\d{4})(?:[,\s]+(\d{1,2}):(\d{2}))?/i);
+  if (m) {
+    const day = parseInt(m[1], 10);
+    const month = SPANISH_MONTHS[m[2].toLowerCase()];
+    const year = parseInt(m[3], 10);
+    const hour = m[4] ? parseInt(m[4], 10) : 23;
+    const min = m[5] ? parseInt(m[5], 10) : 59;
+    if (month !== undefined) {
+      const hStr = String(hour).padStart(2, '0');
+      const minStr = String(min).padStart(2, '0');
+      const dStr = String(day).padStart(2, '0');
+      const moStr = String(month + 1).padStart(2, '0');
+      // America/El_Salvador timezone is UTC-6
+      return new Date(`${year}-${moStr}-${dStr}T${hStr}:${minStr}:00-06:00`);
+    }
+  }
+  const parsed = Date.parse(text);
+  if (!isNaN(parsed)) return new Date(parsed);
+  return null;
+}
+
+export function parseAssignmentPageHtml(html: string): {
+  dueDate: Date | null;
+  cutoffDate: Date | null;
+  allowSubmissionsFromDate: Date | null;
+  intro: string;
+  submissionStatus: string | null;
+  gradeStatus: string | null;
+  timeRemaining: string | null;
+} {
+  let dueDate: Date | null = null;
+  let cutoffDate: Date | null = null;
+  let allowSubmissionsFromDate: Date | null = null;
+  let submissionStatus: string | null = null;
+  let gradeStatus: string | null = null;
+  let timeRemaining: string | null = null;
+
+  // 1. Activity dates section in Moodle 4.x theme (<strong>Apertura:</strong> ... <strong>Cierre:</strong> ...)
+  const tagRegex = /<strong>(Apertura|Cierre|Fecha de entrega|Fecha l[íi]mite|Tiempo restante):?<\/strong>\s*([^<\n]+)/gi;
+  let tm;
+  while ((tm = tagRegex.exec(html)) !== null) {
+    const label = tm[1].toLowerCase();
+    const val = tm[2].trim();
+    if (label.includes('cierre') || label.includes('límite') || label.includes('limite')) {
+      cutoffDate = parseMoodleDateString(val);
+    } else if (label.includes('entrega')) {
+      dueDate = parseMoodleDateString(val);
+    } else if (label.includes('apertura')) {
+      allowSubmissionsFromDate = parseMoodleDateString(val);
+    } else if (label.includes('tiempo')) {
+      timeRemaining = val;
+    }
+  }
+
+  // 2. Table rows in submission details: <tr><th ...>Label</th><td ...>Value</td></tr>
+  const rowRegex = /<tr[^>]*>[\s\S]*?<th[^>]*>([\s\S]*?)<\/th>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?<\/tr>/gi;
+  let rm;
+  while ((rm = rowRegex.exec(html)) !== null) {
+    const th = rm[1].replace(/<[^>]*>/g, '').toLowerCase().trim();
+    const td = rm[2].replace(/<[^>]*>/g, '').trim();
+    if (th.includes('fecha de entrega')) {
+      if (!dueDate) dueDate = parseMoodleDateString(td);
+    } else if (th.includes('fecha límite') || th.includes('fecha limite')) {
+      if (!cutoffDate) cutoffDate = parseMoodleDateString(td);
+    } else if (th.includes('tiempo restante')) {
+      if (!timeRemaining) timeRemaining = td;
+    } else if (th.includes('estado de la entrega')) {
+      submissionStatus = td;
+    } else if (th.includes('calificación') || th.includes('calificacion')) {
+      gradeStatus = td;
+    }
+  }
+
+  // 3. Intro / description
+  let intro = '';
+  const introMatch = html.match(/<div[^>]+(?:id="intro"|class="activity-description")[^>]*>([\s\S]*?)<\/div>/i);
+  if (introMatch) {
+    intro = introMatch[1].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  return {
+    dueDate: cutoffDate || dueDate,
+    cutoffDate,
+    allowSubmissionsFromDate,
+    intro,
+    submissionStatus,
+    gradeStatus,
+    timeRemaining,
+  };
+}
+
 async function fetchAssignmentsScrape(
   sm: SessionManager,
   session: MoodleSession,
@@ -347,15 +446,34 @@ async function fetchAssignmentsScrape(
         const id = parseInt(assignmentMatch[1], 10);
         if (seenAssignments.has(id)) continue;
         seenAssignments.add(id);
+
+        let duedateSec = 0;
+        let allowSubmissionsSec = 0;
+        let introText = '';
+
+        try {
+          const assignHtml = await fetchPage(baseUrl, `/mod/assign/view.php?id=${id}`, session);
+          const parsedDetails = parseAssignmentPageHtml(assignHtml);
+          if (parsedDetails.dueDate) {
+            duedateSec = Math.floor(parsedDetails.dueDate.getTime() / 1000);
+          }
+          if (parsedDetails.allowSubmissionsFromDate) {
+            allowSubmissionsSec = Math.floor(parsedDetails.allowSubmissionsFromDate.getTime() / 1000);
+          }
+          introText = parsedDetails.intro || '';
+        } catch (assignErr) {
+          console.warn(`[Moodle] Could not scrape assignment ${id} details:`, assignErr);
+        }
+
         assignments.push({
           id,
           cmid: id,
           course: courseId,
           name: assignmentMatch[2].replace(' Tarea', '').trim(),
-          intro: '',
+          intro: introText,
           introformat: 1,
-          duedate: 0,
-          allowsubmissionsfromdate: 0,
+          duedate: duedateSec,
+          allowsubmissionsfromdate: allowSubmissionsSec,
           grade: 10,
         });
       }

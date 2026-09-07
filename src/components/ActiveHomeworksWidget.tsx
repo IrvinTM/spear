@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { BookOpen } from 'lucide-react';
 import { getTodos, updateTodoStatus, startDraftGeneration } from '@/app/(dashboard)/dashboard/actions';
 import type { TodoItem } from '@/lib/types';
 
@@ -96,7 +97,7 @@ export function ActiveHomeworksWidget() {
     <div className="cyber-glass rounded-xl p-4 animate-fade-in relative overflow-hidden">
       <div className="absolute top-0 right-0 w-20 h-20 bg-pale-400/5 rounded-bl-full blur-2xl pointer-events-none" />
       <div className="flex items-center gap-2 mb-3 relative z-10">
-        <span className="text-xl">📚</span>
+        <BookOpen className="w-5 h-5 text-accent-400" />
         <h3 className="text-sm font-semibold text-stone-100">Active Homeworks</h3>
       </div>
 

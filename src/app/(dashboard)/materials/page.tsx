@@ -1,6 +1,7 @@
 import { getMaterials } from './actions';
 import { isVaultInitialized } from '@/lib/vault';
 import { redirect } from 'next/navigation';
+import { BookOpen, ExternalLink, FileText } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { CourseSummaryClient } from './CourseSummaryClient';
 
@@ -25,7 +26,7 @@ export default async function MaterialsPage() {
 
         {courseGroups.length === 0 ? (
           <EmptyState
-            icon="📚"
+            icon={<BookOpen className="w-12 h-12 stroke-[1.5]" />}
             title="No courses found"
             description='Go to the Dashboard and click "Sync Moodle" to fetch your courses.'
           />
@@ -50,7 +51,7 @@ export default async function MaterialsPage() {
                   <ul className="flex flex-col gap-2">
                     {group.materials.map((m) => (
                       <li key={`${m.id}-${m.filename || 'module'}`} className="flex items-center gap-3 text-sm">
-                        <span className="text-stone-400">{m.type === 'url' ? '🔗' : '📄'}</span>
+                        <span className="text-stone-400">{m.type === 'url' ? <ExternalLink className="w-4 h-4 shrink-0" /> : <FileText className="w-4 h-4 shrink-0" />}</span>
                         <div className="min-w-0 flex-1">
                           <a
                             href={m.url || '#'}

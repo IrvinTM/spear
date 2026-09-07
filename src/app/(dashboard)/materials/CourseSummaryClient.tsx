@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ChevronRight, Sparkles } from 'lucide-react';
 import { generateAiSummary } from './actions';
 
 export function CourseSummaryClient({ courseId, rawSummary }: { courseId: number; rawSummary: string }) {
@@ -26,7 +27,7 @@ export function CourseSummaryClient({ courseId, rawSummary }: { courseId: number
     <details className="mb-4 group">
       <summary className="cursor-pointer text-sm font-medium text-accent-400 hover:text-accent-300 list-none flex items-center gap-2">
         <span className="w-4 h-4 inline-flex items-center justify-center bg-accent-500/10 rounded group-open:rotate-90 transition-transform">
-          ▶
+          <ChevronRight className="w-3.5 h-3.5" />
         </span>
         Ver resumen
       </summary>
@@ -39,8 +40,13 @@ export function CourseSummaryClient({ courseId, rawSummary }: { courseId: number
             <button 
               onClick={handleGenerate}
               disabled={isLoading}
-              className="bg-accent-600 hover:bg-accent-500 disabled:opacity-50 text-white text-xs px-3 py-1.5 rounded font-medium transition-colors">
-              {isLoading ? 'Generando...' : '✨ Generar Resumen con IA'}
+              className="inline-flex items-center gap-1.5 bg-accent-600 hover:bg-accent-500 disabled:opacity-50 text-white text-xs px-3 py-1.5 rounded font-medium transition-colors">
+              {isLoading ? 'Generando...' : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Generar Resumen con IA
+                </>
+              )}
             </button>
             {error && <p className="text-red-400 text-xs">{error}</p>}
           </div>

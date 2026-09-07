@@ -86,7 +86,7 @@ async function getFallbackModuleContents(
  * Parses a downloaded Moodle resource HTML page to find the actual file URL
  * (pluginfile.php link). Returns null if no link is found.
  */
-function extractPluginfileUrl(html: string, baseUrl: string): string | null {
+function extractPluginfileUrl(html: string): string | null {
   // Match pluginfile.php URLs for mod_resource content
   const pattern = /https?:\/\/[^"'\s]*pluginfile\.php\/\d+\/mod_resource\/content\/\d+\/[^"'\s]+/g;
   const matches = html.match(pattern);
@@ -152,7 +152,7 @@ async function syncMaterialFile({
     // If we got an HTML page for a resource/folder type, try to extract the actual file URL
     if (mime === 'text/html' && ['module_download', 'page_snapshot'].includes(content.type)) {
       const html = download.bytes.toString('utf-8');
-      const realUrl = extractPluginfileUrl(html, sm.getBaseUrl());
+      const realUrl = extractPluginfileUrl(html);
       if (realUrl) {
         const realDownload = await sm.download(session, realUrl, maxBytes);
         const realMime = realDownload.contentType?.split(';', 1)[0] || null;
@@ -367,23 +367,34 @@ async function syncAssignments(
         updated_at: now,
       });
 
-      // Create a todo for new assignments with future due dates
+      // Create or update todo for assignments
       const localAssignmentId = isNew
         ? Number(result.lastInsertRowid)
         : (checkExisting.get(a.id) as { id: number }).id;
 
-      if (!a.duedate || a.duedate * 1000 > Date.now()) {
-        if (!checkTodoExists.get(localAssignmentId)) {
-          insertTodo.run({
-            title: a.name,
-            description: a.intro ? a.intro.replace(/<[^>]*>/g, '').slice(0, 500) : null,
-            source_id: localAssignmentId,
-            due_date: dueDateIso,
-            created_at: now,
-            updated_at: now,
-          });
-          todosCreated++;
-        }
+      if (checkTodoExists.get(localAssignmentId)) {
+        db.prepare(`
+          UPDATE todos SET
+            due_date = @due_date,
+            description = COALESCE(@description, description),
+            updated_at = @updated_at
+          WHERE source_type = 'assignment' AND source_id = @source_id
+        `).run({
+          due_date: dueDateIso,
+          description: a.intro ? a.intro.replace(/<[^>]*>/g, '').slice(0, 500) : null,
+          updated_at: now,
+          source_id: localAssignmentId,
+        });
+      } else if (!a.duedate || a.duedate * 1000 > Date.now()) {
+        insertTodo.run({
+          title: a.name,
+          description: a.intro ? a.intro.replace(/<[^>]*>/g, '').slice(0, 500) : null,
+          source_id: localAssignmentId,
+          due_date: dueDateIso,
+          created_at: now,
+          updated_at: now,
+        });
+        todosCreated++;
       }
     }
 

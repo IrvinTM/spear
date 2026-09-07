@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Pause, Volume2 } from 'lucide-react';
 
 interface BriefingData {
   hasSummary: boolean;
@@ -79,7 +80,7 @@ export function SyncBriefing({ expanded = true }: { expanded?: boolean }) {
               : 'border-pale-600/40 bg-stone-950/60 hover:border-pale-400/50'
           } disabled:opacity-40`}
         >
-          {isAudioLoading ? <span className="spinner spinner--sm" /> : isPlaying ? '⏸' : '🔊'}
+          {isAudioLoading ? <span className="spinner spinner--sm" /> : isPlaying ? <Pause className="w-4 h-4 text-pale-300" /> : <Volume2 className="w-4 h-4 text-stone-300" />}
         </button>
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-stone-100">Briefing</h3>

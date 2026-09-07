@@ -1,23 +1,30 @@
 'use client';
 
 import { useState } from 'react';
+import { Check, AlertCircle, Loader2, RotateCw, Copy, FileText } from 'lucide-react';
 import type { AssignmentWithDraft } from './actions';
 import { startDraftGeneration, getDraftStatus } from '@/app/(dashboard)/dashboard/actions';
-import { useRouter } from 'next/navigation';
 
 function DraftStatus({ status }: { status: string | null }) {
   if (!status) return null;
   const configs = {
-    completed: 'bg-success/10 text-success',
-    running: 'bg-pale-700/30 text-pale-300',
-    failed: 'bg-danger/10 text-danger',
+    completed: { cls: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', icon: Check, label: 'Draft ready' },
+    running: { cls: 'bg-pale-700/30 text-pale-300 border border-pale-500/20', icon: Loader2, label: 'Drafting...' },
+    failed: { cls: 'bg-rose-500/10 text-rose-400 border border-rose-500/20', icon: AlertCircle, label: 'Failed' },
   };
-  const labels = { completed: '✓ Draft ready', running: '⟳ Drafting...', failed: '✗ Failed' };
-  const cls = configs[status as keyof typeof configs] ?? 'bg-stone-700/50 text-stone-400';
-  const label = labels[status as keyof typeof labels] ?? status;
+  const cfg = configs[status as keyof typeof configs];
+  if (!cfg) {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-stone-700/50 text-stone-400">
+        {status}
+      </span>
+    );
+  }
+  const Icon = cfg.icon;
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${cls}`}>
-      {label}
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${cfg.cls}`}>
+      <Icon className={`w-3 h-3 ${status === 'running' ? 'animate-spin' : ''}`} />
+      {cfg.label}
     </span>
   );
 }
@@ -76,15 +83,26 @@ function AssignmentCard({ assignment }: { assignment: AssignmentWithDraft }) {
             <>
               <button
                 onClick={() => handleGenerateDraft(true)}
-                className="px-3 py-1.5 text-xs font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700 rounded-lg border border-white/10 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700 rounded-lg border border-white/10 transition-colors cursor-pointer"
               >
-                ⟳ Regenerate
+                <RotateCw className="w-3 h-3" />
+                Regenerate
               </button>
               <button
                 onClick={handleCopy}
-                className="px-3 py-1.5 text-xs font-medium text-stone-200 bg-stone-800 hover:bg-stone-700 rounded-lg border border-white/10 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-stone-200 bg-stone-800 hover:bg-stone-700 rounded-lg border border-white/10 transition-colors cursor-pointer"
               >
-                {copied ? '✓ Copied' : 'Copy'}
+                {copied ? (
+                  <>
+                    <Check className="w-3 h-3 text-emerald-400" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3" />
+                    Copy
+                  </>
+                )}
               </button>
               <button
                 onClick={() => setEditing(!editing)}
@@ -138,7 +156,9 @@ export function AssignmentsClient({ assignments }: { assignments: AssignmentWith
     <div className="grid gap-5">
       {assignments.length === 0 ? (
         <div className="text-center py-12 text-stone-500">
-          <p className="text-4xl mb-3">📝</p>
+          <div className="flex justify-center mb-3">
+            <FileText className="w-10 h-10 text-stone-600 stroke-[1.5]" />
+          </div>
           <p className="font-medium">No assignments found</p>
           <p className="text-sm mt-1">Sync Moodle from the dashboard to load your assignments.</p>
         </div>

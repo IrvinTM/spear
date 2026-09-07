@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Check, GraduationCap, Info, AlertTriangle, CheckCircle2, Lightbulb, Rocket } from 'lucide-react';
 import { setupVault, checkLlmStatus, type ActionResult } from './actions';
 
 type Step = 'welcome' | 'master-password' | 'credentials' | 'llm-check' | 'complete';
@@ -37,11 +38,11 @@ function Stepper({ currentIndex }: { currentIndex: number }) {
         return (
           <div key={s} className="contents">
             <div
-              className={`step-dot ${
+              className={`step-dot flex items-center justify-center ${
                 done ? 'step-dot--done' : active ? 'step-dot--active' : 'step-dot--pending'
               }`}
             >
-              {done ? '✓' : i + 1}
+              {done ? <Check className="w-3.5 h-3.5" /> : i + 1}
             </div>
             {i < innerSteps.length - 1 && (
               <div className={`stepper-connector ${done ? 'stepper-connector--done' : ''}`} />
@@ -136,8 +137,8 @@ export default function SetupPage() {
       <div className="w-full max-w-[520px]">
         {/* Header */}
         <div className="text-center mb-10 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-accent-700 to-accent-500 mb-5 text-2xl shadow-glow">
-            🎓
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-accent-700 to-accent-500 mb-5 shadow-glow">
+            <GraduationCap className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight mb-2">Spear</h1>
           <p className="text-sm text-stone-400 leading-relaxed">
@@ -158,7 +159,7 @@ export default function SetupPage() {
               dashboard. It runs locally on your machine — your credentials never leave this device.
             </p>
             <div className="flex items-start gap-3 p-4 rounded-lg bg-info/[0.08] border border-info/20 text-sm text-blue-300 mb-4">
-              <span>ℹ️</span>
+              <Info className="w-5 h-5 shrink-0 text-blue-400 mt-0.5" />
               <span>
                 You&apos;ll need your UES Moodle username and password. Optionally, a Gmail app
                 password for email sync.
@@ -235,7 +236,7 @@ export default function SetupPage() {
                 />
               </div>
 
-              {error && <p className="text-xs text-danger flex items-center gap-1">⚠ {error}</p>}
+              {error && <p className="text-xs text-danger flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {error}</p>}
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -325,7 +326,7 @@ export default function SetupPage() {
                 </div>
               </div>
 
-              {error && <p className="text-xs text-danger flex items-center gap-1">⚠ {error}</p>}
+              {error && <p className="text-xs text-danger flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {error}</p>}
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -363,7 +364,7 @@ export default function SetupPage() {
             </p>
 
             <div className="flex items-center gap-3 p-4 rounded-lg bg-stone-800 border border-white/[0.06]">
-              <span className="text-xl shrink-0">{agyAvailable ? '✅' : '⚠️'}</span>
+              <span className="shrink-0">{agyAvailable ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <AlertTriangle className="w-5 h-5 text-amber-400" />}</span>
               <div className="flex-1">
                 <p className="text-sm font-medium">
                   {agyAvailable ? 'Antigravity CLI detected' : 'Antigravity CLI not found'}
@@ -378,7 +379,7 @@ export default function SetupPage() {
 
             {!agyAvailable && (
               <div className="flex items-start gap-3 p-4 rounded-lg bg-warning/[0.08] border border-warning/20 text-sm text-yellow-300 mt-4">
-                <span>💡</span>
+                <Lightbulb className="w-5 h-5 shrink-0 text-yellow-400 mt-0.5" />
                 <span>
                   You can install the Antigravity CLI later and it will be automatically detected on
                   next launch.
@@ -399,7 +400,9 @@ export default function SetupPage() {
         {step === 'complete' && (
           <Card key="complete">
             <div className="text-center py-6">
-              <div className="text-5xl mb-4">🚀</div>
+              <div className="flex justify-center mb-4">
+                <Rocket className="w-12 h-12 text-accent-400" />
+              </div>
               <h2 className="text-xl font-semibold mb-2">You&apos;re all set!</h2>
               <p className="text-sm text-stone-400 mb-6">
                 Your vault is encrypted and credentials are saved. Spear is ready to sync

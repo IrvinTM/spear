@@ -52,3 +52,39 @@ export interface CourseMaterialGroup {
   materials: MaterialItem[];
   summary?: string;
 }
+
+export type AttentionEventType = 'exam' | 'assignment' | 'project' | 'quiz' | 'workshop' | 'other';
+export type AttentionUrgency = 'immediate' | 'this_week' | 'next_week' | 'upcoming' | 'future' | 'past';
+
+export interface AttentionEvent {
+  id: number;
+  courseId: number;
+  courseName: string;
+  courseCode?: string;
+  title: string;
+  eventType: AttentionEventType;
+  startDate: string | null;
+  dueDate: string | null;
+  dateLabel: string;
+  weekNumber: number | null;
+  weight: string | null;
+  description: string | null;
+  sourceDocument: string | null;
+  priority: number;
+  urgency: AttentionUrgency;
+  daysRemaining?: number | null;
+  status: 'upcoming' | 'in_progress' | 'completed' | 'dismissed';
+}
+
+export interface AttentionData {
+  currentWeek: number;
+  currentWeekLabel: string;
+  currentDate: string;
+  thisWeekEvents: AttentionEvent[];
+  upcomingEvents: AttentionEvent[];
+  topEvents: AttentionEvent[];
+  allEvents: AttentionEvent[];
+  summary: string;
+  lastAnalyzedAt: string | null;
+}
+

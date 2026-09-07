@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Bot, AudioLines, Volume2, Pause, Download } from 'lucide-react';
 import { playThinkingCue, playCompleteCue, playErrorCue } from '@/lib/client/audio-cues';
 
 type Message = { role: 'user' | 'assistant'; content: string };
@@ -14,6 +15,7 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
   const [isTalking, setIsTalking] = useState(false);
   const [isAudioLoading, setIsAudioLoading] = useState(false);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [cachedAudioIndices, setCachedAudioIndices] = useState<Set<number>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCacheRef = useRef<Map<number, string>>(new Map());
@@ -25,8 +27,9 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
   }, [messages]);
 
   useEffect(() => {
+    const cache = audioCacheRef.current;
     return () => {
-      audioCacheRef.current.forEach(url => URL.revokeObjectURL(url));
+      cache.forEach(url => URL.revokeObjectURL(url));
     };
   }, []);
 
@@ -83,6 +86,7 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       audioCacheRef.current.set(messageIndex, url);
+      setCachedAudioIndices(prev => new Set(prev).add(messageIndex));
       playAudioBlob(url, messageIndex);
     } catch (err) {
       console.warn('TTS Error:', err);
@@ -155,8 +159,8 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
           {/* Header */}
           <div className="p-4 border-b border-accent-500/10 flex items-center gap-4 bg-stone-950/40">
             <div className={`relative w-12 h-12 rounded-full overflow-hidden border-2 flex-shrink-0 bg-stone-950/60 transition-colors duration-300 ${isTalking ? 'border-pale-400 shadow-[0_0_15px_rgba(166,172,205,0.3)]' : 'border-pale-600/40'}`}>
-              <div className="absolute inset-0 flex items-center justify-center text-2xl">
-                {isTalking ? <span className="animate-pulse">🗣️</span> : <span>🤖</span>}
+              <div className="absolute inset-0 flex items-center justify-center">
+                {isTalking ? <AudioLines className="w-6 h-6 text-pale-300 animate-pulse" /> : <Bot className="w-6 h-6 text-stone-400" />}
               </div>
             </div>
             <div>
@@ -189,17 +193,17 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
                       }`}
                       title={playingIndex === i ? 'Pausar' : 'Reproducir'}
                     >
-                      {isAudioLoading && playingIndex === null && !audioCacheRef.current.has(i)
+                      {isAudioLoading && playingIndex === null && !cachedAudioIndices.has(i)
                         ? <span className="spinner spinner--sm" />
-                        : <span className="text-xs">{playingIndex === i ? '⏸' : '🔊'}</span>}
+                        : playingIndex === i ? <Pause className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
                     </button>
-                    {audioCacheRef.current.has(i) && (
+                    {cachedAudioIndices.has(i) && (
                       <button
                         onClick={() => handleDownload(i)}
                         className="w-6 h-6 flex items-center justify-center rounded-full text-stone-500 hover:text-stone-300 hover:bg-white/[0.04] transition-colors cursor-pointer"
                         title="Descargar audio"
                       >
-                        <span className="text-xs">⬇</span>
+                        <Download className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
@@ -213,8 +217,8 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
       {/* Input bar — always visible */}
       <form onSubmit={handleSend} className={`p-3 bg-stone-950/40 ${expanded ? 'border-t border-accent-500/10' : ''} flex gap-2 items-center`}>
         {!expanded && (
-          <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-base border-2 transition-colors ${isTalking || isLoading ? 'border-pale-400 bg-pale-600/20' : 'border-pale-600/40 bg-stone-950/60'}`}>
-            {isTalking ? <span className="animate-pulse text-sm">🗣️</span> : isLoading ? <span className="spinner spinner--sm" /> : <span className="text-sm">🤖</span>}
+          <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border-2 transition-colors ${isTalking || isLoading ? 'border-pale-400 bg-pale-600/20' : 'border-pale-600/40 bg-stone-950/60'}`}>
+            {isTalking ? <AudioLines className="w-4 h-4 text-pale-300 animate-pulse" /> : isLoading ? <span className="spinner spinner--sm" /> : <Bot className="w-4 h-4 text-stone-400" />}
           </div>
         )}
         <input

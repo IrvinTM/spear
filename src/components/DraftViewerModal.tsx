@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ArrowLeft, Check, Copy } from 'lucide-react';
 import { getDraftStatus } from '@/app/(dashboard)/dashboard/actions';
 
 export function DraftViewerModal({ todoId, title, onClose }: { todoId: number; title: string; onClose: () => void }) {
@@ -30,10 +31,10 @@ export function DraftViewerModal({ todoId, title, onClose }: { todoId: number; t
         <div className="flex items-center gap-3">
           <button
             onClick={onClose}
-            className="text-stone-400 hover:text-white transition-colors cursor-pointer"
+            className="text-stone-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-white/[0.05]"
             title="Close"
           >
-            ←
+            <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
             <p className="text-xs text-stone-500">AI Draft</p>
@@ -47,7 +48,17 @@ export function DraftViewerModal({ todoId, title, onClose }: { todoId: number; t
             disabled={loading || !draft}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-stone-200 bg-stone-800 hover:bg-stone-700 rounded-lg border border-white/10 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {copied ? '✓ Copied!' : 'Copy all'}
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                Copy all
+              </>
+            )}
           </button>
           <button
             onClick={onClose}

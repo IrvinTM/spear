@@ -7,8 +7,10 @@ import { SyncBriefing } from '@/components/SyncBriefing';
 import { EmailBriefing } from '@/components/EmailBriefing';
 import { CalendarWidget } from '@/components/CalendarWidget';
 import { ActiveHomeworksWidget } from '@/components/ActiveHomeworksWidget';
+import { WhatRequiresYourAttentionWidget } from '@/components/WhatRequiresYourAttentionWidget';
 import { LiveActivity } from '@/components/LiveActivity';
 import { playSyncStartCue, playSyncDoneCue, playErrorCue } from '@/lib/client/audio-cues';
+import { Radio, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSidebar } from '@/components/SidebarContext';
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -34,6 +36,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
+
+      {/* Middle: What Requires Your Attention Widget (Prominent, with hide option) */}
+      {isTodoTab && (
+        <div className={`fixed top-4 z-30 transition-all duration-300 pointer-events-none flex justify-center ${
+          collapsed ? 'left-0 right-0' : 'left-60 right-0'
+        } max-md:left-0 px-4`}>
+          <div className="pointer-events-auto w-full max-w-2xl xl:max-w-3xl max-h-[calc(100vh-8rem)] overflow-y-auto pr-1">
+            <WhatRequiresYourAttentionWidget />
+          </div>
+        </div>
+      )}
 
       {/* Left side: Briefing panels (Only visible on Todo tab) */}
       {isTodoTab && (
@@ -66,7 +79,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               onClick={() => setChatExpanded((v) => !v)}
               className="text-xs text-stone-500 hover:text-stone-300 transition-colors cursor-pointer flex items-center gap-1"
             >
-              {chatExpanded ? '▼ Collapse' : '▲ Expand chat'}
+              {chatExpanded ? <><ChevronDown className="w-3.5 h-3.5" /> Collapse</> : <><ChevronUp className="w-3.5 h-3.5" /> Expand chat</>}
             </button>
           </div>
           <div className={chatExpanded ? 'flex-1 min-h-0' : ''}>
@@ -88,14 +101,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-accent-500/10 bg-stone-950/60">
               <div className="flex items-center gap-2">
-                <span>📡</span>
+                <Radio className="w-4 h-4 text-emerald-400" />
                 <h3 className="text-sm font-semibold text-stone-100">Activity</h3>
               </div>
               <button
                 onClick={() => setActivityOpen(false)}
                 className="w-6 h-6 flex items-center justify-center rounded-md text-stone-500 hover:text-stone-200 hover:bg-white/[0.06] transition-colors cursor-pointer"
+                title="Cerrar actividad"
               >
-                &times;
+                <X className="w-4 h-4" />
               </button>
             </div>
             <div className="h-[calc(100%-48px)]">
@@ -113,7 +127,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             } ${activityOpen ? 'opacity-0 pointer-events-none' : ''}`}
             title="Activity"
           >
-            📡
+            <Radio className="w-4 h-4 text-pale-300" />
           </button>
         </>
       )}

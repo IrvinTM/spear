@@ -2,14 +2,23 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  CheckSquare,
+  FileText,
+  BookOpen,
+  Mail,
+  ScrollText,
+  Settings,
+  ChevronLeft,
+} from 'lucide-react';
 import { useSidebar } from './SidebarContext';
 
 const navItems = [
-  { href: '/', label: 'Todo', icon: '📋' },
-  { href: '/assignments', label: 'Assignments', icon: '📝' },
-  { href: '/materials', label: 'Materials', icon: '📚' },
-  { href: '/email', label: 'Email', icon: '✉️' },
-  { href: '/logs', label: 'Logs', icon: '📜' },
+  { href: '/', label: 'Todo', icon: CheckSquare },
+  { href: '/assignments', label: 'Assignments', icon: FileText },
+  { href: '/materials', label: 'Materials', icon: BookOpen },
+  { href: '/email', label: 'Email', icon: Mail },
+  { href: '/logs', label: 'Logs', icon: ScrollText },
 ];
 
 const activeClass =
@@ -28,13 +37,13 @@ export function Sidebar() {
           C
         </div>
         <span className="text-base font-semibold tracking-tight flex-1">Spear</span>
-        <button onClick={toggle} className="w-8 h-8 flex items-center justify-center rounded text-stone-500 hover:text-stone-200 hover:bg-white/[0.06] transition-colors cursor-pointer">
-          ❮
+        <button onClick={toggle} className="w-8 h-8 flex items-center justify-center rounded text-stone-500 hover:text-stone-200 hover:bg-white/[0.06] transition-colors cursor-pointer" title="Colapsar sidebar">
+          <ChevronLeft className="w-4 h-4" />
         </button>
       </div>
 
       <nav className="flex flex-col gap-1 flex-1">
-        {navItems.map(({ href, label, icon }) => {
+        {navItems.map(({ href, label, icon: Icon }) => {
           const isActive =
             href === '/' ? pathname === '/' : pathname.startsWith(href);
           return (
@@ -43,8 +52,8 @@ export function Sidebar() {
               href={href}
               className={isActive ? activeClass : inactiveClass}
             >
-              <span className="w-5 text-center">{icon}</span>
-              {label}
+              <Icon className="w-4 h-4 shrink-0" />
+              <span>{label}</span>
             </Link>
           );
         })}
@@ -57,8 +66,8 @@ export function Sidebar() {
             pathname.startsWith('/settings') ? activeClass : inactiveClass
           }
         >
-          <span className="w-5 text-center">⚙️</span>
-          Settings
+          <Settings className="w-4 h-4 shrink-0" />
+          <span>Settings</span>
         </Link>
       </div>
     </aside>

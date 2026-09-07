@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Calendar, MapPin } from 'lucide-react';
 
 interface ClassData {
   summary: string;
@@ -48,7 +49,10 @@ export function CalendarWidget() {
               Ends at {new Date(data.ongoingClass.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
             {data.ongoingClass.location && (
-              <p className="text-xs text-accent-200/70 mt-1">📍 {data.ongoingClass.location}</p>
+              <p className="text-xs text-accent-200/70 mt-1 flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-accent-300/80 shrink-0" />
+                <span>{data.ongoingClass.location}</span>
+              </p>
             )}
           </div>
         </div>
@@ -58,7 +62,7 @@ export function CalendarWidget() {
       <div className="cyber-glass rounded-xl p-4 animate-fade-in relative overflow-hidden">
         <div className="absolute top-0 left-0 w-24 h-16 bg-accent-400/5 rounded-br-full blur-2xl pointer-events-none" />
         <div className="flex items-center gap-2 mb-2 relative z-10">
-          <span className="text-xl">📅</span>
+          <Calendar className="w-4 h-4 text-accent-400" />
           <h3 className="text-sm font-semibold text-stone-100">Next Event</h3>
         </div>
 
@@ -72,7 +76,10 @@ export function CalendarWidget() {
                 {new Date(data.nextClass.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(data.nextClass.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
               {data.nextClass.location && (
-                <p className="text-xs text-stone-500 mt-1">📍 {data.nextClass.location}</p>
+                <p className="text-xs text-stone-500 mt-1 flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-stone-400 shrink-0" />
+                  <span>{data.nextClass.location}</span>
+                </p>
               )}
             </div>
           ) : (

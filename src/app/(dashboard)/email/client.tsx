@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { RotateCw, Mail, AlertTriangle } from 'lucide-react';
 import { PasswordModal } from '@/components/PasswordModal';
 import { EmptyState } from '@/components/EmptyState';
 import { AlertBanner } from '@/components/AlertBanner';
@@ -73,7 +74,7 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
             disabled={isSyncing}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-600 text-white text-sm font-medium border border-accent-700 shadow-sm hover:bg-accent-500 hover:shadow-glow transition-all disabled:opacity-40"
           >
-            {isSyncing ? <><span className="spinner spinner--sm" /> Syncing…</> : '🔄 Sync Gmail'}
+            {isSyncing ? <><span className="spinner spinner--sm" /> Syncing…</> : <><RotateCw className="w-4 h-4" /> Sync Gmail</>}
           </button>
         </div>
 
@@ -87,7 +88,7 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
 
         {emails.length === 0 ? (
           <EmptyState
-            icon="✉️"
+            icon={<Mail className="w-12 h-12 stroke-[1.5]" />}
             title="Inbox Empty"
             description='Click "Sync Gmail" to fetch your institutional emails from the last 14 days.'
           />
@@ -109,8 +110,9 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
                   <p className="text-sm text-stone-300 leading-relaxed">{email.summary}</p>
                 </div>
                 {email.hasDeadline && (
-                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warning/10 border border-warning/20 text-xs text-warning font-medium">
-                    ⚠️ Deadline detected — added to Todos
+                  <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-warning/10 border border-warning/20 text-xs text-warning font-medium">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    Deadline detected — added to Todos
                   </div>
                 )}
               </div>
