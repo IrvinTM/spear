@@ -5,7 +5,7 @@ import { getAgentHome } from '@/lib/config';
 const CHARACTERS_DIR = () => path.join(getAgentHome(), 'data', 'characters');
 const DEFAULT_CHARACTER = 'default_character.glb';
 
-export async function getCharactersDir(): Promise<string> {
+async function getCharactersDir(): Promise<string> {
   const dir = CHARACTERS_DIR();
   await fs.mkdir(dir, { recursive: true });
   return dir;

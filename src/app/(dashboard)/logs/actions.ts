@@ -1,6 +1,6 @@
 'use server';
 
-export type ActivityLogRow = {
+type ActivityLogRow = {
   id: number;
   category: string;
   level: 'info' | 'warning' | 'error';

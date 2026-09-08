@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { logActivity } from '@/lib/activity-log';
 
-export interface ChatIntent {
+interface ChatIntent {
   courseId: number | null;
   courseName: string | null;
   relevantFiles: string[];

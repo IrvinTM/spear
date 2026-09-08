@@ -21,7 +21,7 @@ interface RawEventExtraction {
  * Filters the PDF text to isolate schedule tables and evaluation sections,
  * removing boilerplate and table-of-contents to fit cleanly within LLM context.
  */
-export function extractCalendarAndEvalPages(fullText: string): string {
+function extractCalendarAndEvalPages(fullText: string): string {
   const pages = fullText.split(/-- \d+ of \d+ --/);
   const selectedPages: string[] = [];
 
@@ -348,7 +348,7 @@ No agregues comentarios ni markdown fences, responde con el JSON puro.`;
  * Computes urgency and time remaining relative to the active semester timeline.
  * Current date baseline: September 7, 2026 (Week 5: Sept 7 - Sept 13, 2026).
  */
-export function calculateUrgency(
+function calculateUrgency(
   dueDateStr: string | null,
   weekNumber: number | null,
   now: Date,

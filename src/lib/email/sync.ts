@@ -3,7 +3,7 @@ import { simpleParser } from 'mailparser';
 import { getDb } from '@/lib/db';
 import { streamText, isAgyAvailable } from '@/lib/llm';
 
-export interface EmailSyncResult {
+interface EmailSyncResult {
   success: boolean;
   emailsFetched: number;
   todosCreated: number;
@@ -100,8 +100,6 @@ export async function syncEmails(username: string, appPassword: string): Promise
       date14DaysAgo.setDate(date14DaysAgo.getDate() - 14);
 
       // Search for emails since 14 days ago
-      // UES uses @ues.edu.sv so we could filter by sender, but for now we'll fetch all or apply filter here.
-      // E.g., client.search({ since: date14DaysAgo, from: 'ues.edu.sv' })
       const messages = client.fetch({ since: date14DaysAgo }, { source: true, envelope: true });
 
       const checkExisting = db.prepare('SELECT id FROM emails WHERE message_id = ?');
@@ -144,11 +142,6 @@ export async function syncEmails(username: string, appPassword: string): Promise
         if (!message.source) continue;
         const parsed = await simpleParser(message.source as Buffer);
         const fromAddr = parsed.from?.value[0]?.address || 'unknown';
-
-        // Only process @ues.edu.sv for now to save tokens (could be configurable)
-        if (!fromAddr.endsWith('@ues.edu.sv') && !fromAddr.endsWith('@gmail.com')) {
-          // continue;
-        }
 
         pendingEmails.push({
           msgId,

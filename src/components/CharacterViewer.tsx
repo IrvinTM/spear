@@ -147,72 +147,15 @@ function VRMModel({ url, pose, animationUrl, talkingAnimationUrl }: { url: strin
         spine.rotation.x = Math.sin(t * 1.2) * 0.005;
       }
 
-    // Poses
-    const leftUpper = vrm.humanoid?.getNormalizedBoneNode('leftUpperArm');
-    const rightUpper = vrm.humanoid?.getNormalizedBoneNode('rightUpperArm');
-    const leftLower = vrm.humanoid?.getNormalizedBoneNode('leftLowerArm');
-    const rightLower = vrm.humanoid?.getNormalizedBoneNode('rightLowerArm');
-    const neck = vrm.humanoid?.getNormalizedBoneNode('neck');
+      // Poses
+      const leftUpper = vrm.humanoid?.getNormalizedBoneNode('leftUpperArm');
+      const rightUpper = vrm.humanoid?.getNormalizedBoneNode('rightUpperArm');
+      const leftLower = vrm.humanoid?.getNormalizedBoneNode('leftLowerArm');
+      const rightLower = vrm.humanoid?.getNormalizedBoneNode('rightLowerArm');
+      const neck = vrm.humanoid?.getNormalizedBoneNode('neck');
 
-    const dt = delta;
-    const lerp = (obj: any, target: number) => {
-      if (obj) obj.value = THREE.MathUtils.lerp(obj.value, target, dt * 5);
-    };
-    
-    // Reset all expressions smoothly
-    if (vrm.expressionManager) {
-      ['a', 'neutral'].forEach(exp => {
-        const val = vrm.expressionManager!.getValue(exp) || 0;
-        vrm.expressionManager!.setValue(exp, THREE.MathUtils.lerp(val, 0, dt * 5));
-      });
-    }
-
-    if (pose === 'thinking') {
-      // Left hand on chin
-      if (leftUpper) {
-        leftUpper.rotation.z = THREE.MathUtils.lerp(leftUpper.rotation.z, 0.4, dt * 5);
-        leftUpper.rotation.x = THREE.MathUtils.lerp(leftUpper.rotation.x, -0.2, dt * 5);
-      }
-      if (leftLower) {
-        leftLower.rotation.z = THREE.MathUtils.lerp(leftLower.rotation.z, 2.2, dt * 5);
-        leftLower.rotation.x = THREE.MathUtils.lerp(leftLower.rotation.x, -0.5, dt * 5);
-      }
-      if (rightUpper) {
-        rightUpper.rotation.z = THREE.MathUtils.lerp(rightUpper.rotation.z, -1.2, dt * 5);
-        rightUpper.rotation.x = THREE.MathUtils.lerp(rightUpper.rotation.x, 0, dt * 5);
-      }
-      if (rightLower) rightLower.rotation.z = THREE.MathUtils.lerp(rightLower.rotation.z, 0, dt * 5);
-      if (neck) neck.rotation.x = THREE.MathUtils.lerp(neck.rotation.x, 0.15, dt * 5);
-      
-    } else if (pose === 'speaking') {
-      // Gesturing and lip sync
-      if (leftUpper) {
-        leftUpper.rotation.z = THREE.MathUtils.lerp(leftUpper.rotation.z, 0.8 + Math.sin(t * 3) * 0.1, dt * 5);
-        leftUpper.rotation.x = THREE.MathUtils.lerp(leftUpper.rotation.x, -0.2, dt * 5);
-      }
-      if (leftLower) leftLower.rotation.z = THREE.MathUtils.lerp(leftLower.rotation.z, 0.8, dt * 5);
-      if (rightUpper) {
-        rightUpper.rotation.z = THREE.MathUtils.lerp(rightUpper.rotation.z, -0.8 - Math.sin(t * 2.5) * 0.1, dt * 5);
-        rightUpper.rotation.x = THREE.MathUtils.lerp(rightUpper.rotation.x, -0.2, dt * 5);
-      }
-      if (rightLower) rightLower.rotation.z = THREE.MathUtils.lerp(rightLower.rotation.z, -0.5, dt * 5);
-      if (neck) neck.rotation.x = THREE.MathUtils.lerp(neck.rotation.x, -0.05, dt * 5);
-      
-      // Simulate talking (even if custom animation is running)
+      // Reset all expressions smoothly
       if (vrm.expressionManager) {
-        const talkVol = Math.max(0, Math.sin(t * 20) * 0.8 + 0.2);
-        vrm.expressionManager.setValue('a', Math.max(vrm.expressionManager.getValue('a') || 0, talkVol));
-      }
-      
-    }
-    
-    // Blink: periodic eye close
-      if (leftUpper) {
-        leftUpper.rotation.z = THREE.MathUtils.lerp(leftUpper.rotation.z, 1.2 + Math.sin(t * 1.5) * 0.02, dt * 5);
-        leftUpper.rotation.x = THREE.MathUtils.lerp(leftUpper.rotation.x, 0, dt * 5);
-      }
-      if (leftLower) {
-        leftLower.rotation.z = THREE.MathUtils.lerp(leftLower.rotation.z, 0, dt * 5);
         ['a', 'neutral'].forEach(exp => {
           const val = vrm.expressionManager!.getValue(exp) || 0;
           vrm.expressionManager!.setValue(exp, THREE.MathUtils.lerp(val, 0, dt * 5));
@@ -235,7 +178,7 @@ function VRMModel({ url, pose, animationUrl, talkingAnimationUrl }: { url: strin
         }
         if (rightLower) rightLower.rotation.z = THREE.MathUtils.lerp(rightLower.rotation.z, 0, dt * 5);
         if (neck) neck.rotation.x = THREE.MathUtils.lerp(neck.rotation.x, 0.15, dt * 5);
-        
+
       } else if (pose === 'speaking') {
         // Gesturing and lip sync
         if (leftUpper) {
@@ -249,20 +192,27 @@ function VRMModel({ url, pose, animationUrl, talkingAnimationUrl }: { url: strin
         }
         if (rightLower) rightLower.rotation.z = THREE.MathUtils.lerp(rightLower.rotation.z, -0.5, dt * 5);
         if (neck) neck.rotation.x = THREE.MathUtils.lerp(neck.rotation.x, -0.05, dt * 5);
-        
+
         // Simulate talking (even if custom animation is running)
         if (vrm.expressionManager) {
           const talkVol = Math.max(0, Math.sin(t * 20) * 0.8 + 0.2);
           vrm.expressionManager.setValue('a', Math.max(vrm.expressionManager.getValue('a') || 0, talkVol));
         }
+
+      } else {
+        // Idle: arms relaxed at sides
+        if (leftUpper) {
+          leftUpper.rotation.z = THREE.MathUtils.lerp(leftUpper.rotation.z, 1.2 + Math.sin(t * 1.5) * 0.02, dt * 5);
+          leftUpper.rotation.x = THREE.MathUtils.lerp(leftUpper.rotation.x, 0, dt * 5);
+        }
+        if (leftLower) leftLower.rotation.z = THREE.MathUtils.lerp(leftLower.rotation.z, 0, dt * 5);
+        if (rightUpper) {
+          rightUpper.rotation.z = THREE.MathUtils.lerp(rightUpper.rotation.z, -1.2 - Math.sin(t * 1.5) * 0.02, dt * 5);
+          rightUpper.rotation.x = THREE.MathUtils.lerp(rightUpper.rotation.x, 0, dt * 5);
+        }
+        if (rightLower) rightLower.rotation.z = THREE.MathUtils.lerp(rightLower.rotation.z, 0, dt * 5);
+        if (neck) neck.rotation.x = THREE.MathUtils.lerp(neck.rotation.x, 0, dt * 5);
       }
-      
-      if (rightUpper) {
-        rightUpper.rotation.z = THREE.MathUtils.lerp(rightUpper.rotation.z, -1.2 - Math.sin(t * 1.5) * 0.02, dt * 5);
-        rightUpper.rotation.x = THREE.MathUtils.lerp(rightUpper.rotation.x, 0, dt * 5);
-      }
-      if (rightLower) rightLower.rotation.z = THREE.MathUtils.lerp(rightLower.rotation.z, 0, dt * 5);
-      if (neck) neck.rotation.x = THREE.MathUtils.lerp(neck.rotation.x, 0, dt * 5);
     }
     
     // Blink: periodic eye close

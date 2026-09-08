@@ -3,14 +3,14 @@
  * Handles login, cookie management, sesskey extraction, and API calls.
  */
 
-export class MoodleAuthError extends Error {
+class MoodleAuthError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'MoodleAuthError';
   }
 }
 
-export class MoodleSessionExpiredError extends Error {
+class MoodleSessionExpiredError extends Error {
   constructor(message: string = 'Moodle session expired') {
     super(message);
     this.name = 'MoodleSessionExpiredError';
@@ -31,7 +31,7 @@ export interface MoodleSession {
   createdAt: Date;
 }
 
-export interface MoodleDownload {
+interface MoodleDownload {
   bytes: Buffer;
   contentType: string | null;
   contentLength: number | null;
@@ -45,7 +45,7 @@ const DEFAULT_USER_AGENT =
 /**
  * Checks if a session is expired (older than 90 minutes).
  */
-export function isSessionExpired(session: MoodleSession): boolean {
+function isSessionExpired(session: MoodleSession): boolean {
   return Date.now() - session.createdAt.getTime() > SESSION_MAX_AGE_MS;
 }
 
