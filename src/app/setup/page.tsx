@@ -59,7 +59,7 @@ function Stepper({ currentIndex }: { currentIndex: number }) {
 /* ------------------------------------------------------------------ */
 const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <div
-    className={`bg-stone-900 border border-white/[0.06] rounded-2xl p-8 shadow-lg animate-slide-up ${className}`}
+    className={`bg-stone-900/95 border border-white/[0.1] rounded-2xl p-8 shadow-xl backdrop-blur-xl animate-slide-up ${className}`}
   >
     {children}
   </div>
@@ -137,7 +137,7 @@ export default function SetupPage() {
       <div className="w-full max-w-[520px]">
         {/* Header */}
         <div className="text-center mb-10 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-accent-700 to-accent-500 mb-5 shadow-glow">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-500 to-accent-600 mb-5">
             <GraduationCap className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight mb-2">Spear</h1>
@@ -158,15 +158,15 @@ export default function SetupPage() {
               Spear syncs your Moodle courses, assignments, and email into a single
               dashboard. It runs locally on your machine — your credentials never leave this device.
             </p>
-            <div className="flex items-start gap-3 p-4 rounded-lg bg-info/[0.08] border border-info/20 text-sm text-blue-300 mb-4">
-              <Info className="w-5 h-5 shrink-0 text-blue-400 mt-0.5" />
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-info/10 border border-info/25 text-sm text-accent-200 mb-4">
+              <Info className="w-5 h-5 shrink-0 text-accent-400 mt-0.5" />
               <span>
                 You&apos;ll need your UES Moodle username and password. Optionally, a Gmail app
                 password for email sync.
               </span>
             </div>
             <button
-              className="w-full mt-2 px-6 py-3.5 rounded-xl bg-accent-600 text-white font-medium text-base border border-accent-700 shadow-sm hover:bg-accent-500 hover:shadow-glow hover:-translate-y-px active:bg-accent-700 active:translate-y-0 transition-all cursor-pointer"
+              className="w-full mt-2 px-6 py-3.5 rounded-xl bg-accent-500 text-white font-medium text-base hover:bg-accent-400 active:bg-accent-600 transition-all cursor-pointer"
               onClick={goNext}
             >
               Get started
@@ -196,7 +196,7 @@ export default function SetupPage() {
                   value={masterPassword}
                   onChange={(e) => { setMasterPassword(e.target.value); setError(''); }}
                   autoFocus
-                  className={`w-full px-4 py-3 rounded-lg bg-stone-950 border text-stone-50 text-base outline-none placeholder:text-stone-500 transition-all focus:border-accent-500 focus:ring-[3px] focus:ring-accent-500/15 ${
+                  className={`w-full px-4 py-3 rounded-lg bg-stone-950 border text-stone-50 text-base outline-none placeholder:text-stone-500 transition-all focus:border-accent-400/60 focus:ring-2 focus:ring-accent-500/25 ${
                     error && !confirmPassword ? 'border-danger' : 'border-white/10'
                   }`}
                 />
@@ -230,7 +230,7 @@ export default function SetupPage() {
                   value={confirmPassword}
                   onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
                   onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
-                  className={`w-full px-4 py-3 rounded-lg bg-stone-950 border text-stone-50 text-base outline-none placeholder:text-stone-500 transition-all focus:border-accent-500 focus:ring-[3px] focus:ring-accent-500/15 ${
+                  className={`w-full px-4 py-3 rounded-lg bg-stone-950 border text-stone-50 text-base outline-none placeholder:text-stone-500 transition-all focus:border-accent-400/60 focus:ring-2 focus:ring-accent-500/25 ${
                     error ? 'border-danger' : 'border-white/10'
                   }`}
                 />
@@ -241,13 +241,13 @@ export default function SetupPage() {
 
             <div className="flex gap-3 mt-6">
               <button
-                className="flex-1 px-5 py-3 rounded-lg bg-stone-700 text-stone-50 font-medium text-sm border border-white/10 hover:bg-stone-600 hover:border-white/15 transition-all cursor-pointer"
+                className="flex-1 px-5 py-3 rounded-lg bg-white/[0.06] text-stone-100 font-medium text-sm border border-white/[0.1] hover:bg-white/[0.1] transition-all cursor-pointer"
                 onClick={goBack}
               >
                 Back
               </button>
               <button
-                className="flex-1 px-5 py-3 rounded-lg bg-accent-600 text-white font-medium text-sm border border-accent-700 shadow-sm hover:bg-accent-500 hover:shadow-glow hover:-translate-y-px active:bg-accent-700 active:translate-y-0 transition-all cursor-pointer"
+                className="flex-1 px-5 py-3 rounded-lg bg-accent-500 text-white font-medium text-sm hover:bg-accent-400 active:bg-accent-600 transition-all cursor-pointer"
                 onClick={handlePasswordSubmit}
               >
                 Continue
@@ -278,7 +278,7 @@ export default function SetupPage() {
                   onChange={(e) => { setUesUsername(e.target.value); setError(''); }}
                   autoFocus
                   autoComplete="username"
-                  className="w-full px-4 py-3 rounded-lg bg-stone-950 border border-white/10 text-stone-50 text-base outline-none placeholder:text-stone-500 transition-all focus:border-accent-500 focus:ring-[3px] focus:ring-accent-500/15"
+                  className="w-full px-4 py-3 rounded-lg bg-stone-950 border border-white/10 text-stone-50 text-base outline-none placeholder:text-stone-500 transition-all focus:border-accent-400/60 focus:ring-2 focus:ring-accent-500/25"
                 />
               </div>
 
@@ -293,7 +293,7 @@ export default function SetupPage() {
                   value={uesPassword}
                   onChange={(e) => { setUesPassword(e.target.value); setError(''); }}
                   autoComplete="current-password"
-                  className="w-full px-4 py-3 rounded-lg bg-stone-950 border border-white/10 text-stone-50 text-base outline-none placeholder:text-stone-500 transition-all focus:border-accent-500 focus:ring-[3px] focus:ring-accent-500/15"
+                  className="w-full px-4 py-3 rounded-lg bg-stone-950 border border-white/10 text-stone-50 text-base outline-none placeholder:text-stone-500 transition-all focus:border-accent-400/60 focus:ring-2 focus:ring-accent-500/25"
                 />
               </div>
 
@@ -309,7 +309,7 @@ export default function SetupPage() {
                     placeholder="16-character app password"
                     value={gmailAppPassword}
                     onChange={(e) => setGmailAppPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-stone-950 border border-white/10 text-stone-50 text-base outline-none placeholder:text-stone-500 transition-all focus:border-accent-500 focus:ring-[3px] focus:ring-accent-500/15"
+                    className="w-full px-4 py-3 rounded-lg bg-stone-950 border border-white/10 text-stone-50 text-base outline-none placeholder:text-stone-500 transition-all focus:border-accent-400/60 focus:ring-2 focus:ring-accent-500/25"
                   />
                   <p className="text-xs text-stone-500 leading-relaxed">
                     Enable 2FA in your UES Gmail, then create an app password at{' '}
@@ -331,14 +331,14 @@ export default function SetupPage() {
 
             <div className="flex gap-3 mt-6">
               <button
-                className="flex-1 px-5 py-3 rounded-lg bg-stone-700 text-stone-50 font-medium text-sm border border-white/10 hover:bg-stone-600 hover:border-white/15 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 px-5 py-3 rounded-lg bg-white/[0.06] text-stone-100 font-medium text-sm border border-white/[0.1] hover:bg-white/[0.1] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 onClick={goBack}
                 disabled={isPending}
               >
                 Back
               </button>
               <button
-                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-accent-600 text-white font-medium text-sm border border-accent-700 shadow-sm hover:bg-accent-500 hover:shadow-glow hover:-translate-y-px active:bg-accent-700 active:translate-y-0 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-accent-500 text-white font-medium text-sm hover:bg-accent-400 active:bg-accent-600 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 onClick={handleCredentialsSubmit}
                 disabled={isPending}
               >
@@ -363,7 +363,7 @@ export default function SetupPage() {
               generation.
             </p>
 
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-stone-800 border border-white/[0.06]">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-stone-800/60 border border-white/[0.08]">
               <span className="shrink-0">{agyAvailable ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <AlertTriangle className="w-5 h-5 text-amber-400" />}</span>
               <div className="flex-1">
                 <p className="text-sm font-medium">
@@ -378,8 +378,8 @@ export default function SetupPage() {
             </div>
 
             {!agyAvailable && (
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-warning/[0.08] border border-warning/20 text-sm text-yellow-300 mt-4">
-                <Lightbulb className="w-5 h-5 shrink-0 text-yellow-400 mt-0.5" />
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-warning/10 border border-warning/25 text-sm text-warning mt-4">
+                <Lightbulb className="w-5 h-5 shrink-0 text-warning mt-0.5" />
                 <span>
                   You can install the Antigravity CLI later and it will be automatically detected on
                   next launch.
@@ -388,7 +388,7 @@ export default function SetupPage() {
             )}
 
             <button
-              className="w-full mt-6 px-5 py-3 rounded-lg bg-accent-600 text-white font-medium text-sm border border-accent-700 shadow-sm hover:bg-accent-500 hover:shadow-glow hover:-translate-y-px active:bg-accent-700 active:translate-y-0 transition-all cursor-pointer"
+              className="w-full mt-6 px-5 py-3 rounded-lg bg-accent-500 text-white font-medium text-sm hover:bg-accent-400 active:bg-accent-600 transition-all cursor-pointer"
               onClick={goNext}
             >
               {agyAvailable ? 'Continue' : 'Skip for now'}
@@ -409,7 +409,7 @@ export default function SetupPage() {
                 your courses and assignments.
               </p>
               <button
-                className="px-8 py-3.5 rounded-xl bg-accent-600 text-white font-medium text-base border border-accent-700 shadow-sm hover:bg-accent-500 hover:shadow-glow hover:-translate-y-px active:bg-accent-700 active:translate-y-0 transition-all cursor-pointer"
+                className="px-8 py-3.5 rounded-xl bg-accent-500 text-white font-medium text-base hover:bg-accent-400 active:bg-accent-600 transition-all cursor-pointer"
                 onClick={() => router.push('/')}
               >
                 Open dashboard

@@ -35,7 +35,7 @@ export default async function MaterialsPage() {
             {courseGroups.map((group) => (
               <div
                 key={group.courseId}
-                className="bg-stone-900 border border-white/[0.06] rounded-xl p-4 sm:p-5 shadow-sm min-w-0 max-w-full overflow-hidden"
+                className="bg-stone-900/95 border border-white/[0.08] rounded-xl p-4 sm:p-5 shadow-sm min-w-0 max-w-full overflow-hidden"
               >
                 <div className="flex justify-between items-start mb-3 sm:mb-4 min-w-0">
                   <h3 className="font-semibold text-stone-200 text-sm sm:text-base break-words">{group.courseName}</h3>

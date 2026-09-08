@@ -33,8 +33,8 @@ export function CalendarWidget() {
     <>
       {/* Right Now Widget */}
       {data.ongoingClass && (
-        <div className="bg-accent-600/20 border border-accent-500/30 rounded-xl p-4 shadow-sm animate-fade-in relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-accent-500/10 rounded-bl-full blur-xl pointer-events-none" />
+        <div className="bg-accent-500/12 border border-accent-500/25 rounded-xl p-4 animate-fade-in relative overflow-hidden">
+          
           <div className="flex items-center gap-2 mb-2 relative z-10">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-400 opacity-75"></span>
@@ -60,7 +60,7 @@ export function CalendarWidget() {
 
       {/* Next Class Widget */}
       <div className="cyber-glass rounded-xl p-4 animate-fade-in relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-24 h-16 bg-accent-400/5 rounded-br-full blur-2xl pointer-events-none" />
+        
         <div className="flex items-center gap-2 mb-2 relative z-10">
           <Calendar className="w-4 h-4 text-accent-400" />
           <h3 className="text-sm font-semibold text-stone-100">Next Event</h3>

@@ -119,7 +119,7 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
         <button
           onClick={handleSync}
           disabled={isSyncing}
-          className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-pale-800 text-pale-200 text-xs sm:text-sm font-medium border border-pale-600/40 shadow-sm hover:bg-pale-700 active:bg-pale-900 transition-all cursor-pointer disabled:opacity-40 shrink-0"
+          className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-accent-500 text-white text-xs sm:text-sm font-medium hover:bg-accent-400 active:bg-accent-600 transition-all cursor-pointer disabled:opacity-40 shrink-0"
         >
           {isSyncing ? (
             <>
@@ -148,15 +148,15 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar en correos..."
-              className="w-full bg-stone-900 border border-white/[0.08] rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-stone-200 placeholder-stone-500 outline-none focus:border-pale-500 transition-colors"
+              className="w-full bg-stone-900/95 border border-white/[0.1] rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-stone-200 placeholder:text-stone-500 outline-none focus:border-accent-400/60 transition-colors"
             />
           </div>
           <button
             onClick={() => setOnlyDeadlines((v) => !v)}
             className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors cursor-pointer shrink-0 ${
               onlyDeadlines
-                ? 'bg-warning/20 border-warning/40 text-warning'
-                : 'bg-stone-900 border-white/[0.08] text-stone-400 hover:text-stone-200'
+                ? 'bg-warning/15 border-warning/30 text-warning'
+                : 'bg-stone-900/95 border-white/[0.1] text-stone-400 hover:text-stone-200'
             }`}
           >
             <AlertTriangle className="w-3.5 h-3.5" />
@@ -186,8 +186,8 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
             return (
               <div
                 key={email.id}
-                className={`bg-stone-900 border transition-all rounded-xl overflow-hidden ${
-                  isExpanded ? 'border-pale-600/40 shadow-lg' : 'border-white/[0.06] hover:border-white/[0.12]'
+                className={`bg-stone-900/95 border transition-all rounded-xl overflow-hidden ${
+                  isExpanded ? 'border-accent-500/40 shadow-lg' : 'border-white/[0.08] hover:border-white/[0.14]'
                 }`}
               >
                 {/* Compact Item Header (always visible, click to toggle) */}
@@ -197,7 +197,7 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
                 >
                   <div className="flex items-center justify-between gap-2 min-w-0">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-6 h-6 rounded-full bg-stone-800 border border-white/[0.06] flex items-center justify-center text-[10px] font-bold text-pale-300 shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-accent-500/15 border border-accent-500/25 flex items-center justify-center text-[10px] font-semibold text-accent-300 shrink-0">
                         {senderDisplay.charAt(0).toUpperCase()}
                       </div>
                       <span className="text-xs font-semibold text-stone-200 truncate">
@@ -236,7 +236,7 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
 
                 {/* Expanded Full Reading View */}
                 {isExpanded && (
-                  <div className="px-3.5 pb-4 pt-1 sm:px-4 border-t border-white/[0.04] bg-stone-950/40 space-y-3">
+                  <div className="px-3.5 pb-4 pt-1 sm:px-4 border-t border-white/[0.04] bg-stone-950/60 space-y-3">
                     {/* Full Metadata */}
                     <div className="flex flex-col gap-1 text-xs text-stone-400 pt-2 min-w-0">
                       <div className="flex items-start gap-1.5 min-w-0">
@@ -260,16 +260,16 @@ export function EmailClient({ initialEmails }: { initialEmails: EmailItem[] }) {
                     )}
 
                     {/* AI Summary Card */}
-                    <div className="bg-stone-950 rounded-xl p-3.5 sm:p-4 border border-white/[0.06] space-y-2">
+                    <div className="bg-stone-950 rounded-xl p-3.5 sm:p-4 border border-white/[0.08] space-y-2">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-pale-400 text-xs font-semibold uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5 text-accent-400 text-xs font-semibold uppercase tracking-wider">
                           <Sparkles className="w-3.5 h-3.5" />
                           <span>Resumen IA</span>
                         </div>
                         {email.summary && (
                           <button
                             onClick={(e) => handleCopySummary(email.id, email.summary, e)}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-stone-900 border border-white/[0.08] text-[11px] text-stone-400 hover:text-stone-200 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white/[0.05] border border-white/[0.08] text-[11px] text-stone-400 hover:text-stone-200 transition-colors cursor-pointer"
                             title="Copiar resumen"
                           >
                             {copiedId === email.id ? (

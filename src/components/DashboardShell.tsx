@@ -93,7 +93,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       >
         <div className={`cyber-glass rounded-xl shadow-2xl overflow-hidden flex flex-col ${chatExpanded ? 'h-full' : ''}`}>
           {/* Expand toggle */}
-          <div className="flex items-center justify-end px-3 py-1.5 border-b border-accent-500/10 bg-stone-950/40">
+          <div className="flex items-center justify-end px-3 py-1.5 border-b border-white/[0.06] bg-stone-900/50">
             <button
               onClick={() => setChatExpanded((v) => !v)}
               className="text-xs text-stone-500 hover:text-stone-300 transition-colors cursor-pointer flex items-center gap-1"
@@ -118,7 +118,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             }`}
             style={{ height: '350px' }}
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-accent-500/10 bg-stone-950/60">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-stone-900/50">
               <div className="flex items-center gap-2">
                 <Radio className="w-4 h-4 text-emerald-400" />
                 <h3 className="text-sm font-semibold text-stone-100">Activity</h3>
@@ -141,12 +141,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             onClick={() => setActivityOpen((v) => !v)}
             className={`hidden md:flex fixed bottom-12 right-[calc(360px+2rem)] max-lg:right-6 max-lg:bottom-[calc(4rem+60px)] z-50 w-10 h-10 rounded-full items-center justify-center text-lg shadow-lg border transition-all cursor-pointer hover:-translate-y-0.5 ${
               activityOpen
-                ? 'bg-pale-700 border-pale-600 shadow-[0_0_15px_rgba(166,172,205,0.15)]'
-                : 'bg-stone-950/60 backdrop-blur-xl border-pale-700/40 hover:bg-pale-800/60 hover:border-pale-500/40 hover:shadow-[0_0_12px_rgba(166,172,205,0.1)]'
+                ? 'bg-accent-500 border-accent-400/60'
+                : 'bg-stone-900/60 backdrop-blur-xl border-white/[0.1] hover:bg-stone-800/70 hover:border-white/[0.16]'
             } ${activityOpen ? 'opacity-0 pointer-events-none' : ''}`}
             title="Activity"
           >
-            <Radio className="w-4 h-4 text-pale-300" />
+            <Radio className="w-4 h-4 text-accent-300" />
           </button>
         </>
       )}
@@ -156,7 +156,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {isTodoTab && (
           <button
             onClick={() => setActivityOpen(true)}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-stone-900/90 border border-pale-700/40 text-pale-300 shadow-lg backdrop-blur-md active:scale-95 transition-transform cursor-pointer"
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-stone-900/90 border border-white/[0.1] text-accent-300 shadow-lg backdrop-blur-md active:scale-95 transition-transform cursor-pointer"
             title="Activity"
           >
             <Radio className="w-4 h-4 text-emerald-400" />
@@ -164,18 +164,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
         <button
           onClick={() => setMobileChatOpen(true)}
-          className="w-11 h-11 rounded-full flex items-center justify-center bg-pale-800 border border-pale-500/50 text-pale-200 shadow-xl backdrop-blur-md active:scale-95 transition-transform cursor-pointer"
+          className="w-11 h-11 rounded-full flex items-center justify-center bg-accent-500 border border-accent-400/50 text-white shadow-xl backdrop-blur-md active:scale-95 transition-transform cursor-pointer"
           title="Copilot Chat"
         >
-          <Bot className="w-5 h-5 text-pale-300" />
+          <Bot className="w-5 h-5 text-accent-300" />
         </button>
       </div>
 
       {/* Mobile Copilot Chat Bottom Sheet (Kept mounted to preserve chat state) */}
-      <div className={`fixed inset-x-3 bottom-20 top-16 z-50 cyber-glass rounded-2xl shadow-2xl flex-col overflow-hidden border border-pale-700/40 md:hidden animate-fade-in ${mobileChatOpen ? 'flex' : 'hidden'}`}>
-        <div className="flex items-center justify-between px-4 py-3 border-b border-accent-500/10 bg-stone-950/80">
+      <div className={`fixed inset-x-3 bottom-20 top-16 z-50 cyber-glass rounded-2xl shadow-2xl flex-col overflow-hidden border border-white/[0.1] md:hidden animate-fade-in ${mobileChatOpen ? 'flex' : 'hidden'}`}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-stone-900/60">
           <div className="flex items-center gap-2">
-            <Bot className="w-4 h-4 text-pale-300" />
+            <Bot className="w-4 h-4 text-accent-300" />
             <h3 className="text-sm font-semibold text-stone-100">Campus Copilot</h3>
           </div>
           <button
@@ -192,8 +192,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Mobile Activity Bottom Sheet (Kept mounted to preserve live stream) */}
-      <div className={`fixed inset-x-3 bottom-20 top-16 z-50 cyber-glass rounded-2xl shadow-2xl flex-col overflow-hidden border border-pale-700/40 md:hidden animate-fade-in ${activityOpen ? 'flex' : 'hidden'}`}>
-        <div className="flex items-center justify-between px-4 py-3 border-b border-accent-500/10 bg-stone-950/80">
+      <div className={`fixed inset-x-3 bottom-20 top-16 z-50 cyber-glass rounded-2xl shadow-2xl flex-col overflow-hidden border border-white/[0.1] md:hidden animate-fade-in ${activityOpen ? 'flex' : 'hidden'}`}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-stone-900/60">
           <div className="flex items-center gap-2">
             <Radio className="w-4 h-4 text-emerald-400" />
             <h3 className="text-sm font-semibold text-stone-100">Live Activity</h3>

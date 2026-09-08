@@ -39,8 +39,8 @@ const urgencyColors = {
 };
 
 const statusConfig = {
-  pending: { label: 'Pending', bg: 'bg-stone-700/50', text: 'text-stone-300', dot: 'bg-stone-400' },
-  in_progress: { label: 'In progress', bg: 'bg-pale-700/30', text: 'text-pale-300', dot: 'bg-pale-400' },
+  pending: { label: 'Pending', bg: 'bg-stone-700/40', text: 'text-stone-300', dot: 'bg-stone-400' },
+  in_progress: { label: 'In progress', bg: 'bg-accent-500/15', text: 'text-accent-300', dot: 'bg-accent-400' },
   done: { label: 'Done', bg: 'bg-success/10', text: 'text-success', dot: 'bg-success' },
 };
 
@@ -95,7 +95,7 @@ export function ActiveHomeworksWidget() {
 
   return (
     <div className="cyber-glass rounded-xl p-4 animate-fade-in relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-20 h-20 bg-pale-400/5 rounded-bl-full blur-2xl pointer-events-none" />
+      
       <div className="flex items-center gap-2 mb-3 relative z-10">
         <BookOpen className="w-5 h-5 text-accent-400" />
         <h3 className="text-sm font-semibold text-stone-100">Active Homeworks</h3>
@@ -105,7 +105,7 @@ export function ActiveHomeworksWidget() {
         {todos.length === 0 ? (
           <p className="text-xs text-stone-500">No active homeworks right now.</p>
         ) : (
-          <div className="flex flex-col divide-y divide-accent-500/10">
+          <div className="flex flex-col divide-y divide-white/[0.05]">
             {todos.map((todo) => {
               const due = formatDueDate(todo.dueDate);
               const cfg = statusConfig[todo.status as keyof typeof statusConfig] || statusConfig.pending;
@@ -114,10 +114,10 @@ export function ActiveHomeworksWidget() {
                   <button
                     onClick={() => handleStatusChange(todo.id, todo.status === 'pending' ? 'in_progress' : 'done')}
                     className={`w-4 h-4 mt-0.5 rounded-full border-2 flex items-center justify-center shrink-0 cursor-pointer hover:scale-110 transition-all ${
-                      todo.status === 'in_progress' ? 'border-pale-400 bg-pale-600/30' : 'border-stone-600 hover:border-stone-400'
+                      todo.status === 'in_progress' ? 'border-accent-400 bg-accent-500/15' : 'border-stone-600 hover:border-stone-400'
                     }`}
                   >
-                    {todo.status === 'in_progress' && <span className="w-1.5 h-1.5 rounded-full bg-pale-400" />}
+                    {todo.status === 'in_progress' && <span className="w-1.5 h-1.5 rounded-full bg-accent-400" />}
                   </button>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-stone-200 truncate">{todo.title}</p>
@@ -129,20 +129,20 @@ export function ActiveHomeworksWidget() {
                         {todo.draftStatus === 'completed' ? (
                           <button
                             onClick={() => router.push('/assignments')}
-                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-accent-500/20 text-accent-300 hover:bg-accent-500/30 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-accent-500/15 text-accent-300 hover:bg-accent-500/25 transition-colors cursor-pointer"
                           >
                             <span className="w-1 h-1 rounded-full bg-accent-400" />
                             Review Draft
                           </button>
                         ) : todo.draftStatus === 'running' ? (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-700/50 text-stone-400">
-                            <span className="w-1 h-1 rounded-full bg-pale-400 animate-pulse" />
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-700/40 text-stone-400">
+                            <span className="w-1 h-1 rounded-full bg-accent-400 animate-pulse" />
                             Drafting...
                           </span>
                         ) : (
                           <button
                             onClick={() => handleGenerateDraft(todo.id)}
-                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-700/50 text-stone-300 hover:bg-stone-600/50 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-700/40 text-stone-300 hover:bg-stone-600/40 transition-colors cursor-pointer"
                           >
                             <span className="w-1 h-1 rounded-full bg-stone-400" />
                             Draft Solution

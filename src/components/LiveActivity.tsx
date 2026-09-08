@@ -16,7 +16,7 @@ interface LogEntry {
 }
 
 const categoryColors: Record<string, string> = {
-  sync: 'bg-accent-500/20 text-accent-400',
+  sync: 'bg-accent-500/15 text-accent-300',
   chat: 'bg-purple-500/20 text-purple-400',
   agy_call: 'bg-blue-500/20 text-blue-400',
   moodle_api: 'bg-emerald-500/20 text-emerald-400',
@@ -74,7 +74,7 @@ export function LiveActivity({ onSyncEvent }: { onSyncEvent?: (type: 'started' |
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06] text-xs text-stone-500">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06] text-xs text-stone-400">
         <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-success animate-pulse' : 'bg-stone-600'}`} />
         {connected ? 'Live' : 'Connecting...'}
         <span className="ml-auto">{logs.length} events</span>
@@ -90,7 +90,7 @@ export function LiveActivity({ onSyncEvent }: { onSyncEvent?: (type: 'started' |
             <span className="text-stone-600 shrink-0 font-mono" suppressHydrationWarning>
               {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
-            <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium ${categoryColors[entry.category] || 'bg-stone-700/50 text-stone-400'}`}>
+            <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${categoryColors[entry.category] || 'bg-white/[0.06] text-stone-300'}`}>
               {entry.category.replace('_', ' ')}
             </span>
             <span className="text-stone-300 truncate">{entry.message}</span>

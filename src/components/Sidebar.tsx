@@ -22,9 +22,9 @@ const navItems = [
 ];
 
 const activeClass =
-  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-pale-700/60 text-pale-300 border border-pale-600/30';
+  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-accent-500/15 text-accent-300 border border-accent-500/25';
 const inactiveClass =
-  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-pale-800/50 hover:text-stone-200 transition-all';
+  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-white/[0.05] hover:text-stone-100 transition-all';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -54,13 +54,13 @@ export function Sidebar() {
         }`}
       >
         <div className="flex items-center gap-3 px-3 mb-8">
-          <div className="w-7 h-7 rounded-md bg-pale-700 border border-pale-600/40 flex items-center justify-center text-sm font-bold text-pale-300">
+          <div className="w-7 h-7 rounded-md bg-accent-500 flex items-center justify-center text-sm font-semibold text-white">
             C
           </div>
           <span className="text-base font-semibold tracking-tight flex-1">Spear</span>
           <button
             onClick={toggle}
-            className="w-8 h-8 flex items-center justify-center rounded text-stone-500 hover:text-stone-200 hover:bg-white/[0.06] transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-100 hover:bg-white/[0.06] transition-colors cursor-pointer"
             title="Colapsar sidebar"
           >
             <ChevronLeft className="w-4 h-4" />
