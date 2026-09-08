@@ -6,7 +6,7 @@ import { AlertBanner } from '@/components/AlertBanner';
 import type { AppSettings } from '@/lib/settings';
 
 const inputClass =
-  'w-full px-4 py-3 rounded-lg bg-stone-950 border border-white/10 text-stone-50 text-sm outline-none placeholder:text-stone-500 transition-all focus:border-accent-500 focus:ring-[3px] focus:ring-accent-500/15';
+  'w-full px-4 py-3 rounded-lg bg-stone-950 border border-white/10 text-stone-50 text-base sm:text-sm outline-none placeholder:text-stone-500 transition-all focus:border-accent-500 focus:ring-[3px] focus:ring-accent-500/15';
 
 const labelClass = 'text-sm font-medium text-stone-400 tracking-wide';
 

@@ -62,15 +62,15 @@ function AssignmentCard({ assignment }: { assignment: AssignmentWithDraft }) {
   };
 
   return (
-    <div className="bg-stone-900 border border-white/[0.06] rounded-xl overflow-hidden">
+    <div className="bg-stone-900 border border-white/[0.06] rounded-xl overflow-hidden min-w-0 max-w-full">
       {/* Header */}
-      <div className="px-5 py-4 flex items-start justify-between gap-4 border-b border-white/[0.04]">
+      <div className="p-4 sm:px-5 sm:py-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 border-b border-white/[0.04] min-w-0">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-0.5">
-            <h3 className="text-sm font-semibold text-stone-100">{assignment.name}</h3>
+          <div className="flex items-center gap-2 flex-wrap mb-0.5 min-w-0">
+            <h3 className="text-sm font-semibold text-stone-100 break-words">{assignment.name}</h3>
             <DraftStatus status={draftStatus} />
           </div>
-          <p className="text-xs text-stone-500">{assignment.courseName}</p>
+          <p className="text-xs text-stone-400 truncate">{assignment.courseName}</p>
           {assignment.dueDate && (
             <p className="text-xs text-stone-500 mt-0.5">
               Due: {new Date(assignment.dueDate).toLocaleDateString('es-SV', { dateStyle: 'medium' })}
@@ -78,19 +78,19 @@ function AssignmentCard({ assignment }: { assignment: AssignmentWithDraft }) {
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 flex-wrap sm:shrink-0 pt-1 sm:pt-0">
           {draftStatus === 'completed' ? (
             <>
               <button
                 onClick={() => handleGenerateDraft(true)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700 rounded-lg border border-white/10 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700 rounded-lg border border-white/10 transition-colors cursor-pointer"
               >
                 <RotateCw className="w-3 h-3" />
                 Regenerate
               </button>
               <button
                 onClick={handleCopy}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-stone-200 bg-stone-800 hover:bg-stone-700 rounded-lg border border-white/10 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-stone-200 bg-stone-800 hover:bg-stone-700 rounded-lg border border-white/10 transition-colors cursor-pointer"
               >
                 {copied ? (
                   <>
@@ -106,7 +106,7 @@ function AssignmentCard({ assignment }: { assignment: AssignmentWithDraft }) {
               </button>
               <button
                 onClick={() => setEditing(!editing)}
-                className="px-3 py-1.5 text-xs font-medium text-white bg-accent-600 hover:bg-accent-500 rounded-lg transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 text-xs font-medium text-white bg-accent-600 hover:bg-accent-500 rounded-lg transition-colors cursor-pointer"
               >
                 {editing ? 'Collapse' : 'Edit Draft'}
               </button>
@@ -130,17 +130,17 @@ function AssignmentCard({ assignment }: { assignment: AssignmentWithDraft }) {
 
       {/* Description */}
       {cleanIntro && !editing && (
-        <div className="px-5 py-3 text-xs text-stone-400 leading-relaxed border-b border-white/[0.04]">
+        <div className="p-4 sm:px-5 sm:py-3 text-xs text-stone-400 leading-relaxed border-b border-white/[0.04] min-w-0">
           <p className="font-medium text-stone-500 mb-1 uppercase tracking-wider text-[10px]">Instructions</p>
-          <p className="line-clamp-3">{cleanIntro}</p>
+          <p className="line-clamp-3 break-words">{cleanIntro}</p>
         </div>
       )}
 
       {/* Inline editor */}
       {editing && draftStatus === 'completed' && (
-        <div className="flex flex-col">
+        <div className="flex flex-col min-w-0">
           <textarea
-            className="w-full bg-stone-950 text-stone-200 text-sm font-mono p-5 resize-none outline-none leading-relaxed min-h-[400px]"
+            className="w-full bg-stone-950 text-stone-200 text-base sm:text-sm font-mono p-4 sm:p-5 resize-none outline-none leading-relaxed min-h-[350px]"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             spellCheck={false}
@@ -153,7 +153,7 @@ function AssignmentCard({ assignment }: { assignment: AssignmentWithDraft }) {
 
 export function AssignmentsClient({ assignments }: { assignments: AssignmentWithDraft[] }) {
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-4 sm:gap-5 min-w-0 max-w-full">
       {assignments.length === 0 ? (
         <div className="text-center py-12 text-stone-500">
           <div className="flex justify-center mb-3">

@@ -136,44 +136,85 @@ export function DashboardClient({
 
   return (
     <>
-      {/* Character — placed beside widgets on desktop, never blocking */}
+      {/* Character — placed beside widgets on desktop, and as a dedicated hero card at the top on mobile */}
+      {/* Desktop: Pinned to the right side next to widgets */}
       {!characterHidden && (
-        <>
-          {/* Desktop: Pinned to the right side next to widgets */}
-          <div className="fixed top-12 bottom-24 right-4 w-[380px] xl:w-[460px] z-0 pointer-events-none hidden lg:block transition-all duration-300">
-            <CharacterViewer
-              characterUrl={`/api/characters/${activeCharacter}`}
-              animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
-              talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
-              pose={characterPose}
-              className="w-full h-full pointer-events-none"
-            />
-          </div>
-          {/* Mobile: Compact non-blocking viewer at the top */}
-          <div className="lg:hidden w-full h-[220px] relative pointer-events-none my-2 z-0 block">
-            <CharacterViewer
-              characterUrl={`/api/characters/${activeCharacter}`}
-              animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
-              talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
-              pose={characterPose}
-              className="w-full h-full pointer-events-none"
-            />
-          </div>
-        </>
+        <div className="fixed top-12 bottom-24 right-4 w-[380px] xl:w-[460px] z-0 pointer-events-none hidden md:block transition-all duration-300">
+          <CharacterViewer
+            characterUrl={`/api/characters/${activeCharacter}`}
+            animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
+            talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
+            pose={characterPose}
+            className="w-full h-full pointer-events-none"
+          />
+        </div>
       )}
+
+      {/* Mobile: Prominent top hero card with live status and 1-tap hide/show toggle */}
+      <div className="md:hidden w-full mb-4 relative z-20 pointer-events-auto">
+        {!characterHidden ? (
+          <div className="cyber-glass rounded-2xl border border-white/[0.08] overflow-hidden shadow-xl bg-stone-950/70">
+            <div className="flex items-center justify-between px-3.5 py-2 border-b border-white/[0.06] bg-stone-900/50">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${characterPose === 'speaking' ? 'bg-success animate-pulse' : characterPose === 'thinking' ? 'bg-warning animate-pulse' : 'bg-pale-400'}`} />
+                <span className="text-xs font-medium text-stone-200">Campus Copilot 3D</span>
+                <span className="text-[10px] text-stone-500 capitalize">· {characterPose}</span>
+              </div>
+              <button
+                onClick={toggleCharacter}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-800/80 hover:bg-stone-700 text-stone-300 text-xs transition-colors cursor-pointer"
+                title="Ocultar personaje 3D"
+              >
+                <EyeOff className="w-3.5 h-3.5" />
+                <span>Ocultar</span>
+              </button>
+            </div>
+            <div className="w-full h-[280px] relative pointer-events-none">
+              <CharacterViewer
+                characterUrl={`/api/characters/${activeCharacter}`}
+                animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
+                talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
+                pose={characterPose}
+                className="w-full h-full pointer-events-none"
+              />
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={toggleCharacter}
+            className="w-full flex items-center justify-between px-4 py-2.5 cyber-glass rounded-xl border border-white/[0.08] text-xs text-stone-300 hover:text-white bg-stone-900/60 shadow-md transition-all cursor-pointer"
+            title="Mostrar personaje 3D"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-pale-400" />
+              <span className="font-medium text-stone-200">Campus Copilot 3D</span>
+              <span className="text-stone-500 text-[11px]">(Oculto)</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 text-pale-400 text-xs font-semibold">
+              <Eye className="w-3.5 h-3.5" />
+              <span>Mostrar personaje</span>
+            </div>
+          </button>
+        )}
+      </div>
+
+      {/* Mobile Quick Ask Bar — placed directly under the Copilot avatar for quick interaction */}
+      <div className="md:hidden w-full mb-4 relative z-20 pointer-events-auto">
+        <QuickAskBar />
+      </div>
 
       {/* Sync error — top overlay */}
       {syncError && (
-        <div className="relative z-10 mb-4">
+        <div className="relative z-20 mb-4">
           <AlertBanner variant="error" title="Sync Failed" message={syncError} />
         </div>
       )}
 
-      {/* Bottom controls area — QuickAskBar + Status & Sync bar */}
+      {/* Bottom controls area — Desktop QuickAskBar + Status & Sync bar */}
       <div className={`fixed bottom-0 max-md:bottom-16 right-0 z-20 max-md:left-0 pointer-events-none transition-all duration-300 ${collapsed ? 'left-0' : 'md:left-60'}`}>
         <div className="flex flex-col gap-2 mx-6 mb-6 max-md:mx-3 max-md:mb-2">
-          {/* Quick Ask Bar to interact with character directly */}
-          <div className="max-w-xl">
+          {/* Quick Ask Bar on Desktop */}
+          <div className="hidden md:block max-w-xl">
             <QuickAskBar />
           </div>
 

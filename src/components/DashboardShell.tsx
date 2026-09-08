@@ -36,9 +36,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      {/* Page Content (renders character & QuickAskBar at the top on mobile) */}
+      {children}
+
       {/* Mobile Flow for Todo Tab: Attention and Briefings in document scroll */}
       {isTodoTab && (
-        <div className="md:hidden w-full flex flex-col gap-4 mb-6 relative z-20 pointer-events-auto">
+        <div className="md:hidden w-full max-w-full min-w-0 flex flex-col gap-4 mb-6 relative z-20 pointer-events-auto">
           <WhatRequiresYourAttentionWidget />
           <CalendarWidget />
           <ActiveHomeworksWidget />
@@ -52,8 +55,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
       )}
-
-      {children}
 
       {/* Desktop: What Requires Your Attention Widget (Left/Center area, next to avatar) */}
       {isTodoTab && (
