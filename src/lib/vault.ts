@@ -29,7 +29,7 @@ const KEY_LENGTH = 32;
 /**
  * Returns the path to the vault file.
  */
-export function getVaultPath(): string {
+function getVaultPath(): string {
   return path.join(getAgentHome(), 'vault.enc');
 }
 

@@ -36,16 +36,6 @@ export function getDb(): Database.Database {
 }
 
 /**
- * Closes the database connection cleanly.
- */
-export function closeDb(): void {
-  if (dbInstance) {
-    dbInstance.close();
-    dbInstance = null;
-  }
-}
-
-/**
  * Initializes the database schema by running pending SQL migrations.
  * Migrations live in src/lib/migrations/ as numbered .sql files (e.g. 001_initial.sql).
  */
@@ -110,21 +100,6 @@ export function getGlobalContext() {
   });
   
   return contextText;
-}
-
-/** Returns a course only when the message contains one unambiguous course name or code. */
-export function findCourseForMessage(message: string): { id: number; fullname: string } | null {
-  const normalized = message.toLocaleLowerCase();
-  const courses = getDb().prepare('SELECT id, fullname, shortname FROM courses WHERE visible = 1').all() as {
-    id: number; fullname: string; shortname: string;
-  }[];
-  const matches = courses.filter((course) => {
-    const fullname = course.fullname.toLocaleLowerCase();
-    const shortname = course.shortname.toLocaleLowerCase();
-    return (fullname.length >= 4 && normalized.includes(fullname)) ||
-      (shortname.length >= 3 && normalized.includes(shortname));
-  });
-  return matches.length === 1 ? { id: matches[0].id, fullname: matches[0].fullname } : null;
 }
 
 export interface CourseWithMaterials {

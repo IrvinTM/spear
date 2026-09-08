@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { getAgentHome } from '@/lib/config';
 
-export const DEFAULT_MAX_MATERIAL_FILE_BYTES = 25 * 1024 * 1024;
+const DEFAULT_MAX_MATERIAL_FILE_BYTES = 25 * 1024 * 1024;
 
 export function getMaterialMaxFileBytes(): number {
   const configured = Number(process.env.MATERIAL_MAX_FILE_BYTES);
@@ -12,7 +12,7 @@ export function getMaterialMaxFileBytes(): number {
     : DEFAULT_MAX_MATERIAL_FILE_BYTES;
 }
 
-export function getMaterialsRoot(): string {
+function getMaterialsRoot(): string {
   return path.join(getAgentHome(), 'data', 'materials');
 }
 

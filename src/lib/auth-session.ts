@@ -52,11 +52,3 @@ export async function getSessionCredentials(): Promise<VaultCredentials | null> 
   return session.creds;
 }
 
-export async function clearSession() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('spear_session')?.value;
-  if (token) {
-    sessionCache.delete(token);
-    cookieStore.delete('spear_session');
-  }
-}

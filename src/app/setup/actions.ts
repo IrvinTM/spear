@@ -3,32 +3,14 @@
 import {
   isVaultInitialized,
   initializeVault,
-  validateMasterPassword,
   type VaultCredentials,
 } from '@/lib/vault';
 import { isAgyAvailable } from '@/lib/llm';
 import { initSchema } from '@/lib/db';
 
-export interface SetupState {
-  vaultExists: boolean;
-  agyAvailable: boolean;
-}
-
 export interface ActionResult {
   success: boolean;
   error?: string;
-}
-
-/**
- * Checks the current setup state: does a vault exist, is agy available?
- */
-export async function getSetupState(): Promise<SetupState> {
-  const [vaultExists, agyAvailable] = await Promise.all([
-    isVaultInitialized(),
-    isAgyAvailable(),
-  ]);
-
-  return { vaultExists, agyAvailable };
 }
 
 /**
@@ -64,44 +46,6 @@ export async function setupVault(
     const message = err instanceof Error ? err.message : 'Unknown error during setup.';
     return { success: false, error: message };
   }
-}
-
-/**
- * Validates the master password against an existing vault.
- */
-export async function unlockExistingVault(
-  formData: FormData,
-): Promise<ActionResult> {
-  try {
-    const masterPassword = formData.get('masterPassword') as string;
-    const valid = await validateMasterPassword(masterPassword);
-    if (!valid) {
-      return { success: false, error: 'Incorrect master password.' };
-    }
-
-    // Ensure schema is up to date on unlock too
-    initSchema();
-
-    return { success: true };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error unlocking vault.';
-    return { success: false, error: message };
-  }
-}
-
-/**
- * Validates UES credentials by attempting a Moodle login.
- * TODO: Implement actual Moodle login test in build step 2.
- */
-export async function testMoodleLogin(
-  username: string,
-  password: string,
-): Promise<ActionResult> {
-  // Placeholder: will be replaced with actual HTTP login flow
-  if (!username || !password) {
-    return { success: false, error: 'Username and password are required.' };
-  }
-  return { success: true };
 }
 
 /**

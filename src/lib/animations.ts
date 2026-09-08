@@ -4,7 +4,7 @@ import { getAgentHome } from '@/lib/config';
 
 const ANIMATIONS_DIR = () => path.join(getAgentHome(), 'data', 'animations');
 
-export async function getAnimationsDir(): Promise<string> {
+async function getAnimationsDir(): Promise<string> {
   const dir = ANIMATIONS_DIR();
   await fs.mkdir(dir, { recursive: true });
   return dir;

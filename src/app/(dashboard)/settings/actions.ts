@@ -1,13 +1,8 @@
 'use server';
 
-import { getSettings, saveSettings, type AppSettings } from '@/lib/settings';
+import { saveSettings, type AppSettings } from '@/lib/settings';
 import { unlockVault, updateCredentials, type VaultCredentials } from '@/lib/vault';
 import { createSession } from '@/lib/auth-session';
-
-export async function loadSettings(): Promise<AppSettings> {
-  return getSettings();
-}
-
 import { revalidatePath } from 'next/cache';
 
 export async function updateSettings(settings: AppSettings): Promise<{ success: boolean; error?: string }> {

@@ -13,7 +13,7 @@ import { buildMaterialPath, getMaterialMaxFileBytes, writeMaterialFile, removeMa
 import { logActivity } from '@/lib/activity-log';
 import { capturePreSyncState, computeDiff, saveSyncSnapshot } from '@/lib/sync-diff';
 
-export interface SyncResult {
+interface SyncResult {
   success: boolean;
   coursesCount: number;
   assignmentsCount: number;

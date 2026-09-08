@@ -12,7 +12,7 @@ import { logActivity } from '@/lib/activity-log';
 /*  API Response Types                                                */
 /* ------------------------------------------------------------------ */
 
-export interface MoodleCourse {
+interface MoodleCourse {
   id: number;
   shortname: string;
   fullname: string;
@@ -22,7 +22,7 @@ export interface MoodleCourse {
   enddate: number;
 }
 
-export interface MoodleAssignment {
+interface MoodleAssignment {
   id: number;
   cmid: number;
   course: number;
@@ -55,33 +55,11 @@ export interface MoodleAttachment {
   mimetype: string;
 }
 
-export interface MoodleCalendarEvent {
-  id: number;
-  name: string;
-  description: string;
-  courseid: number;
-  timestart: number;
-  timeduration: number;
-  eventtype: string;
-  url: string;
-  modulename?: string;
-  instance?: number;
-}
-
-export interface MoodleCourseSection {
+interface MoodleCourseSection {
   id: number;
   name: string;
   visible: number;
-  modules: MoodleCourseModule[];
-}
-
-export interface MoodleCourseModule {
-  id: number;
-  name: string;
-  modname: string;
-  visible: number;
-  url?: string;
-  contents?: MoodleModuleContent[];
+  modules: { id: number; name: string; modname: string; visible: number; url?: string; contents?: MoodleModuleContent[] }[];
 }
 
 export interface MoodleModuleContent {
@@ -134,34 +112,6 @@ export async function fetchAssignments(
     }
     throw err;
   }
-}
-
-export async function fetchCalendarEvents(
-  sm: SessionManager,
-  session: MoodleSession,
-): Promise<MoodleCalendarEvent[]> {
-  try {
-    const response = await sm.callApi<{ events: MoodleCalendarEvent[] }>(
-      session,
-      'core_calendar_get_calendar_upcoming_view',
-      {},
-    );
-    return response.events;
-  } catch {
-    return [];
-  }
-}
-
-export async function fetchCourseContents(
-  sm: SessionManager,
-  session: MoodleSession,
-  courseId: number,
-): Promise<MoodleCourseSection[]> {
-  return sm.callApi<MoodleCourseSection[]>(
-    session,
-    'core_course_get_contents',
-    { courseid: courseId },
-  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -240,10 +190,6 @@ async function fetchAssignmentsWs(
 /*  HTML Scraping fallback                                            */
 /* ------------------------------------------------------------------ */
 
-function getBaseUrl(sm: SessionManager): string {
-  return sm.getBaseUrl();
-}
-
 async function fetchPage(baseUrl: string, path: string, session: MoodleSession): Promise<string> {
   const url = new URL(path, baseUrl).toString();
   const startedAt = Date.now();
@@ -267,7 +213,7 @@ async function fetchCoursesScrape(
   sm: SessionManager,
   session: MoodleSession,
 ): Promise<MoodleCourse[]> {
-  const baseUrl = getBaseUrl(sm);
+  const baseUrl = sm.getBaseUrl();
   const html = await fetchPage(baseUrl, '/my/', session);
 
   const courses: MoodleCourse[] = [];
@@ -295,7 +241,7 @@ const SPANISH_MONTHS: Record<string, number> = {
   julio: 6, agosto: 7, septiembre: 8, setiembre: 8, octubre: 9, noviembre: 10, diciembre: 11,
 };
 
-export function parseMoodleDateString(text: string): Date | null {
+function parseMoodleDateString(text: string): Date | null {
   if (!text) return null;
   const clean = text.toLowerCase().trim();
   const m = clean.match(/(\d{1,2})\s+de\s+([a-z]+)\s+de\s+(\d{4})(?:[,\s]+(\d{1,2}):(\d{2}))?/i);
@@ -319,7 +265,7 @@ export function parseMoodleDateString(text: string): Date | null {
   return null;
 }
 
-export function parseAssignmentPageHtml(html: string): {
+function parseAssignmentPageHtml(html: string): {
   dueDate: Date | null;
   cutoffDate: Date | null;
   allowSubmissionsFromDate: Date | null;
@@ -394,7 +340,7 @@ async function fetchAssignmentsScrape(
   session: MoodleSession,
   courseIds: number[],
 ): Promise<CourseAssignmentResult> {
-  const baseUrl = getBaseUrl(sm);
+  const baseUrl = sm.getBaseUrl();
   const result: CourseAssignmentResult = { courses: [] };
 
   for (const courseId of courseIds) {

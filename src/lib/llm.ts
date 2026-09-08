@@ -5,7 +5,7 @@ import { logActivity } from '@/lib/activity-log';
 /**
  * Base error class for all LLM-related errors.
  */
-export class LlmError extends Error {
+class LlmError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'LlmError';
@@ -15,7 +15,7 @@ export class LlmError extends Error {
 /**
  * Thrown when the agy CLI is not available on PATH.
  */
-export class LlmUnavailableError extends LlmError {
+class LlmUnavailableError extends LlmError {
   constructor(
     message: string = 'Antigravity CLI (agy) is not installed or not available in PATH.',
   ) {
@@ -27,7 +27,7 @@ export class LlmUnavailableError extends LlmError {
 /**
  * Thrown when an LLM generation request exceeds its timeout.
  */
-export class LlmTimeoutError extends LlmError {
+class LlmTimeoutError extends LlmError {
   constructor(message: string = 'LLM generation request timed out.') {
     super(message);
     this.name = 'LlmTimeoutError';
@@ -207,34 +207,6 @@ export async function generateText(
 
   const args = buildArgs('text', model, timeoutMs, options?.effort, undefined, options?.additionalDirectories);
   return executeAgy(prompt, args, timeoutMs);
-}
-
-/**
- * Generates a structured JSON response from the LLM.
- *
- * @param prompt - The prompt to send
- * @param schema - Optional JSON schema string to enforce structure
- * @param options - Optional generation config
- * @returns The parsed JSON object
- */
-export async function generateJson<T>(
-  prompt: string,
-  schema?: string,
-  options?: LlmOptions,
-): Promise<T> {
-  const model = options?.model ?? DEFAULT_MODEL;
-  const timeoutMs = options?.timeout ?? DEFAULT_TIMEOUT;
-
-  const args = buildArgs('json', model, timeoutMs, options?.effort, schema, options?.additionalDirectories);
-  const stdout = await executeAgy(prompt, args, timeoutMs);
-
-  try {
-    return JSON.parse(stdout.trim()) as T;
-  } catch (e) {
-    throw new LlmError(
-      `Failed to parse JSON response: ${e instanceof Error ? e.message : String(e)}\nResponse was: ${stdout.slice(0, 500)}`,
-    );
-  }
 }
 
 /**
