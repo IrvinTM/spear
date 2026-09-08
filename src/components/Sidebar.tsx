@@ -28,48 +28,76 @@ const inactiveClass =
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { collapsed, toggle } = useSidebar();
+  const { collapsed, toggle, setCollapsed } = useSidebar();
+
+  const handleLinkClick = () => {
+    // Auto-close on mobile when a link is clicked
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setCollapsed(true);
+    }
+  };
 
   return (
-    <aside className={`w-60 h-screen fixed top-0 left-0 cyber-glass !rounded-none !border-l-0 !border-t-0 !border-b-0 flex flex-col p-6 z-50 max-md:hidden transition-transform duration-300 ${collapsed ? '-translate-x-full' : 'translate-x-0'}`}>
-      <div className="flex items-center gap-3 px-3 mb-8">
-        <div className="w-7 h-7 rounded-md bg-pale-700 border border-pale-600/40 flex items-center justify-center text-sm font-bold text-pale-300">
-          C
+    <>
+      {/* Backdrop for mobile drawer */}
+      {!collapsed && (
+        <div
+          onClick={() => setCollapsed(true)}
+          className="fixed inset-0 bg-stone-950/80 backdrop-blur-sm z-40 md:hidden animate-fade-in cursor-pointer"
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`w-64 max-w-[80vw] h-screen fixed top-0 left-0 cyber-glass !rounded-none !border-l-0 !border-t-0 !border-b-0 flex flex-col p-6 z-50 transition-transform duration-300 ${
+          collapsed ? '-translate-x-full' : 'translate-x-0'
+        }`}
+      >
+        <div className="flex items-center gap-3 px-3 mb-8">
+          <div className="w-7 h-7 rounded-md bg-pale-700 border border-pale-600/40 flex items-center justify-center text-sm font-bold text-pale-300">
+            C
+          </div>
+          <span className="text-base font-semibold tracking-tight flex-1">Spear</span>
+          <button
+            onClick={toggle}
+            className="w-8 h-8 flex items-center justify-center rounded text-stone-500 hover:text-stone-200 hover:bg-white/[0.06] transition-colors cursor-pointer"
+            title="Colapsar sidebar"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
         </div>
-        <span className="text-base font-semibold tracking-tight flex-1">Spear</span>
-        <button onClick={toggle} className="w-8 h-8 flex items-center justify-center rounded text-stone-500 hover:text-stone-200 hover:bg-white/[0.06] transition-colors cursor-pointer" title="Colapsar sidebar">
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-      </div>
 
-      <nav className="flex flex-col gap-1 flex-1">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const isActive =
-            href === '/' ? pathname === '/' : pathname.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={isActive ? activeClass : inactiveClass}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span>{label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+        <nav className="flex flex-col gap-1 flex-1">
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const isActive =
+              href === '/' ? pathname === '/' : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={handleLinkClick}
+                className={isActive ? activeClass : inactiveClass}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
-      <div className="border-t border-white/[0.06] pt-4">
-        <Link
-          href="/settings"
-          className={
-            pathname.startsWith('/settings') ? activeClass : inactiveClass
-          }
-        >
-          <Settings className="w-4 h-4 shrink-0" />
-          <span>Settings</span>
-        </Link>
-      </div>
-    </aside>
+        <div className="border-t border-white/[0.06] pt-4">
+          <Link
+            href="/settings"
+            onClick={handleLinkClick}
+            className={
+              pathname.startsWith('/settings') ? activeClass : inactiveClass
+            }
+          >
+            <Settings className="w-4 h-4 shrink-0" />
+            <span>Settings</span>
+          </Link>
+        </div>
+      </aside>
+    </>
   );
 }

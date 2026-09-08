@@ -135,9 +135,9 @@ export function DashboardClient({
       )}
 
       {/* Bottom bar — todos + sync, pinned to bottom */}
-      <div className={`fixed bottom-0 right-0 z-20 max-md:left-0 pointer-events-none transition-all duration-300 ${collapsed ? 'left-0' : 'left-60'}`}>
+      <div className={`fixed bottom-0 max-md:bottom-16 right-0 z-20 max-md:left-0 pointer-events-none transition-all duration-300 ${collapsed ? 'left-0' : 'md:left-60'}`}>
         {/* Compact status bar */}
-        <div className="pointer-events-auto mx-6 mb-6 flex items-center gap-3 px-4 py-2.5 cyber-glass rounded-xl shadow-lg">
+        <div className="pointer-events-auto mx-6 mb-6 max-md:mx-3 max-md:mb-2 flex items-center gap-3 max-md:gap-2 px-4 py-2.5 max-md:px-3 max-md:py-2 cyber-glass rounded-xl shadow-lg">
           {/* Sync status dot + text */}
           <div className="flex items-center gap-2 text-xs text-stone-500">
             {syncStatus.status !== 'never' && (

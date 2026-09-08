@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { randomBytes } from 'node:crypto';
 import type { VaultCredentials } from '@/lib/vault';
 
@@ -18,10 +18,19 @@ export async function createSession(creds: VaultCredentials) {
     expiresAt: Date.now() + SESSION_DURATION_MS,
   });
   
+  let isHttps = false;
+  try {
+    const reqHeaders = await headers();
+    isHttps = reqHeaders.get('x-forwarded-proto') === 'https' || reqHeaders.get('referer')?.startsWith('https://') === true;
+  } catch {
+    // headers() might not be available in some contexts
+  }
+  const isSecure = process.env.COOKIE_SECURE === 'true' || isHttps;
+
   const cookieStore = await cookies();
   cookieStore.set('spear_session', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isSecure,
     sameSite: 'lax',
     maxAge: SESSION_DURATION_MS / 1000,
   });
