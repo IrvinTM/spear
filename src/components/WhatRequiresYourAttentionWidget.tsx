@@ -47,19 +47,16 @@ export function WhatRequiresYourAttentionWidget() {
   const [data, setData] = useState<AttentionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, startRefresh] = useTransition();
-  const [hidden, setHidden] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        return localStorage.getItem('spear_attention_hidden') === 'true';
-      } catch {
-        return false;
-      }
-    }
-    return false;
-  });
+  const [hidden, setHidden] = useState(false);
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
 
   useEffect(() => {
+    try {
+      if (localStorage.getItem('spear_attention_hidden') === 'true') {
+        setHidden(true);
+      }
+    } catch {}
+
     async function loadData() {
       setLoading(true);
       const res = await getAttentionAction();

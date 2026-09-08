@@ -57,20 +57,23 @@ export function DashboardClient({
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [syncError, setSyncError] = useState('');
   const [characterPose, setCharacterPose] = useState<CharacterPose>('idle');
-  const [characterHidden, setCharacterHidden] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
+  const [characterHidden, setCharacterHidden] = useState<boolean>(hideCharacter);
+
+  useEffect(() => {
+    try {
       const stored = localStorage.getItem('spear_hide_character');
-      if (stored !== null) return stored === 'true';
-    }
-    return hideCharacter;
-  });
+      if (stored !== null) {
+        setCharacterHidden(stored === 'true');
+      }
+    } catch {}
+  }, []);
 
   const toggleCharacter = () => {
     setCharacterHidden((prev) => {
       const next = !prev;
-      if (typeof window !== 'undefined') {
+      try {
         localStorage.setItem('spear_hide_character', String(next));
-      }
+      } catch {}
       return next;
     });
   };

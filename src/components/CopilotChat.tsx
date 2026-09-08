@@ -11,20 +11,24 @@ const DEFAULT_MESSAGES: Message[] = [
 ];
 
 export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('spear_chat_history');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch {}
-    }
-    return DEFAULT_MESSAGES;
-  });
+  const [messages, setMessages] = useState<Message[]>(DEFAULT_MESSAGES);
+  const isHydratedRef = useRef(false);
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem('spear_chat_history');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+    } catch {}
+    isHydratedRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!isHydratedRef.current) return;
     try {
       localStorage.setItem('spear_chat_history', JSON.stringify(messages));
     } catch {}
