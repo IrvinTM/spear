@@ -46,7 +46,12 @@ export function LiveActivity({ onSyncEvent }: { onSyncEvent?: (type: 'started' |
         const entry = JSON.parse(event.data) as LogEntry;
         lastIdRef.current = entry.id;
 
-        setLogs((prev) => [...prev.slice(-199), entry]);
+        setLogs((prev) => {
+          if (prev.some((e) => e.id === entry.id)) {
+            return prev;
+          }
+          return [...prev.slice(-199), entry];
+        });
 
         if (entry.category === 'sync') {
           if (entry.message.toLowerCase().includes('started')) onSyncEvent?.('started');
@@ -79,8 +84,8 @@ export function LiveActivity({ onSyncEvent }: { onSyncEvent?: (type: 'started' |
         {logs.length === 0 && (
           <p className="text-xs text-stone-600 text-center py-8">Waiting for activity...</p>
         )}
-        {logs.map((entry) => (
-          <div key={entry.id} className="flex items-start gap-2 text-xs py-1 px-1 rounded hover:bg-white/[0.02] animate-fade-in">
+        {logs.map((entry, idx) => (
+          <div key={`${entry.id}-${entry.created_at}-${idx}`} className="flex items-start gap-2 text-xs py-1 px-1 rounded hover:bg-white/[0.02] animate-fade-in">
             <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${levelDot[entry.level] || levelDot.info}`} />
             <span className="text-stone-600 shrink-0 font-mono" suppressHydrationWarning>
               {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
