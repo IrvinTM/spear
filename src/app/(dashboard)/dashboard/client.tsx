@@ -153,16 +153,16 @@ export function DashboardClient({
       {/* Mobile: Prominent top hero card with live status and 1-tap hide/show toggle */}
       <div className="md:hidden w-full mb-4 relative z-20 pointer-events-auto">
         {!characterHidden ? (
-          <div className="cyber-glass rounded-2xl border border-white/[0.08] overflow-hidden shadow-xl bg-stone-950/70">
+          <div className="cyber-glass rounded-2xl overflow-hidden shadow-xl">
             <div className="flex items-center justify-between px-3.5 py-2 border-b border-white/[0.06] bg-stone-900/50">
               <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${characterPose === 'speaking' ? 'bg-success animate-pulse' : characterPose === 'thinking' ? 'bg-warning animate-pulse' : 'bg-pale-400'}`} />
+                <span className={`w-2 h-2 rounded-full ${characterPose === 'speaking' ? 'bg-success animate-pulse' : characterPose === 'thinking' ? 'bg-warning animate-pulse' : 'bg-accent-400'}`} />
                 <span className="text-xs font-medium text-stone-200">Campus Copilot 3D</span>
                 <span className="text-[10px] text-stone-500 capitalize">· {characterPose}</span>
               </div>
               <button
                 onClick={toggleCharacter}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-800/80 hover:bg-stone-700 text-stone-300 text-xs transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-stone-200 text-xs transition-colors cursor-pointer"
                 title="Ocultar personaje 3D"
               >
                 <EyeOff className="w-3.5 h-3.5" />
@@ -182,15 +182,15 @@ export function DashboardClient({
         ) : (
           <button
             onClick={toggleCharacter}
-            className="w-full flex items-center justify-between px-4 py-2.5 cyber-glass rounded-xl border border-white/[0.08] text-xs text-stone-300 hover:text-white bg-stone-900/60 shadow-md transition-all cursor-pointer"
+            className="w-full flex items-center justify-between px-4 py-2.5 cyber-glass rounded-xl text-xs text-stone-200 hover:text-white shadow-md transition-all cursor-pointer"
             title="Mostrar personaje 3D"
           >
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-pale-400" />
+              <span className="w-2 h-2 rounded-full bg-accent-400" />
               <span className="font-medium text-stone-200">Campus Copilot 3D</span>
               <span className="text-stone-500 text-[11px]">(Oculto)</span>
             </div>
-            <div className="inline-flex items-center gap-1.5 text-pale-400 text-xs font-semibold">
+            <div className="inline-flex items-center gap-1.5 text-accent-400 text-xs font-semibold">
               <Eye className="w-3.5 h-3.5" />
               <span>Mostrar personaje</span>
             </div>
@@ -242,17 +242,17 @@ export function DashboardClient({
             )}
 
             <div className="flex items-center gap-1.5 text-xs text-stone-400 ml-auto">
-              <span className={`w-1.5 h-1.5 rounded-full ${activeTodos.length > 0 ? 'bg-pale-400' : 'bg-stone-600'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${activeTodos.length > 0 ? 'bg-accent-400' : 'bg-stone-600'}`} />
               {activeTodos.length} active homework{activeTodos.length !== 1 ? 's' : ''}
             </div>
 
             {/* Avatar Toggle Button */}
             <button
               onClick={toggleCharacter}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-stone-900/80 hover:bg-stone-800 text-stone-400 hover:text-stone-200 border border-white/[0.08] transition-colors text-xs cursor-pointer"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.08] text-stone-400 hover:text-stone-200 border border-white/[0.08] transition-colors text-xs cursor-pointer"
               title={characterHidden ? 'Mostrar Personaje 3D' : 'Ocultar Personaje 3D'}
             >
-              {characterHidden ? <Eye className="w-3.5 h-3.5 text-pale-400" /> : <EyeOff className="w-3.5 h-3.5" />}
+              {characterHidden ? <Eye className="w-3.5 h-3.5 text-accent-400" /> : <EyeOff className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">{characterHidden ? 'Avatar' : 'Ocultar'}</span>
             </button>
 
@@ -260,7 +260,7 @@ export function DashboardClient({
             <button
               onClick={handleSync}
               disabled={isSyncing}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-pale-800 text-pale-300 text-xs font-medium border border-pale-600/40 hover:bg-pale-700 active:bg-pale-900 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-500 text-white text-xs font-medium hover:bg-accent-400 active:bg-accent-600 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
             >
               {isSyncing ? <><span className="spinner spinner--sm" /> Syncing</> : 'Sync'}
             </button>

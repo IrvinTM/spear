@@ -8,14 +8,14 @@ import { startDraftGeneration, getDraftStatus } from '@/app/(dashboard)/dashboar
 function DraftStatus({ status }: { status: string | null }) {
   if (!status) return null;
   const configs = {
-    completed: { cls: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20', icon: Check, label: 'Draft ready' },
-    running: { cls: 'bg-pale-700/30 text-pale-300 border border-pale-500/20', icon: Loader2, label: 'Drafting...' },
-    failed: { cls: 'bg-rose-500/10 text-rose-400 border border-rose-500/20', icon: AlertCircle, label: 'Failed' },
+    completed: { cls: 'bg-success/10 text-success border border-success/25', icon: Check, label: 'Draft ready' },
+    running: { cls: 'bg-accent-500/15 text-accent-300 border border-accent-500/25', icon: Loader2, label: 'Drafting...' },
+    failed: { cls: 'bg-danger/10 text-danger border border-danger/25', icon: AlertCircle, label: 'Failed' },
   };
   const cfg = configs[status as keyof typeof configs];
   if (!cfg) {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-stone-700/50 text-stone-400">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/[0.06] text-stone-300">
         {status}
       </span>
     );
@@ -62,9 +62,9 @@ function AssignmentCard({ assignment }: { assignment: AssignmentWithDraft }) {
   };
 
   return (
-    <div className="bg-stone-900 border border-white/[0.06] rounded-xl overflow-hidden min-w-0 max-w-full">
+    <div className="bg-stone-900/95 border border-white/[0.08] rounded-xl overflow-hidden min-w-0 max-w-full">
       {/* Header */}
-      <div className="p-4 sm:px-5 sm:py-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 border-b border-white/[0.04] min-w-0">
+      <div className="p-4 sm:px-5 sm:py-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 border-b border-white/[0.06] min-w-0">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-0.5 min-w-0">
             <h3 className="text-sm font-semibold text-stone-100 break-words">{assignment.name}</h3>
@@ -83,14 +83,14 @@ function AssignmentCard({ assignment }: { assignment: AssignmentWithDraft }) {
             <>
               <button
                 onClick={() => handleGenerateDraft(true)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-stone-300 bg-stone-800/50 hover:bg-stone-700 rounded-lg border border-white/10 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-stone-200 bg-white/[0.05] hover:bg-white/[0.09] rounded-lg border border-white/[0.08] transition-colors cursor-pointer"
               >
                 <RotateCw className="w-3 h-3" />
                 Regenerate
               </button>
               <button
                 onClick={handleCopy}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-stone-200 bg-stone-800 hover:bg-stone-700 rounded-lg border border-white/10 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-stone-100 bg-white/[0.05] hover:bg-white/[0.09] rounded-lg border border-white/[0.08] transition-colors cursor-pointer"
               >
                 {copied ? (
                   <>
@@ -106,21 +106,21 @@ function AssignmentCard({ assignment }: { assignment: AssignmentWithDraft }) {
               </button>
               <button
                 onClick={() => setEditing(!editing)}
-                className="px-2.5 py-1.5 text-xs font-medium text-white bg-accent-600 hover:bg-accent-500 rounded-lg transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 text-xs font-medium text-white bg-accent-500 hover:bg-accent-400 rounded-lg transition-colors cursor-pointer"
               >
                 {editing ? 'Collapse' : 'Edit Draft'}
               </button>
             </>
           ) : draftStatus === 'running' ? (
             <span className="text-xs text-stone-400 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-pale-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-400 animate-pulse" />
               Working...
             </span>
           ) : (
             <button
               onClick={() => handleGenerateDraft()}
               disabled={!assignment.todoId}
-              className="px-3 py-1.5 text-xs font-medium text-white bg-accent-600 hover:bg-accent-500 rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-xs font-medium text-white bg-accent-500 hover:bg-accent-400 rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Generate Draft
             </button>
@@ -130,7 +130,7 @@ function AssignmentCard({ assignment }: { assignment: AssignmentWithDraft }) {
 
       {/* Description */}
       {cleanIntro && !editing && (
-        <div className="p-4 sm:px-5 sm:py-3 text-xs text-stone-400 leading-relaxed border-b border-white/[0.04] min-w-0">
+        <div className="p-4 sm:px-5 sm:py-3 text-xs text-stone-400 leading-relaxed border-b border-white/[0.06] min-w-0">
           <p className="font-medium text-stone-500 mb-1 uppercase tracking-wider text-[10px]">Instructions</p>
           <p className="line-clamp-3 break-words">{cleanIntro}</p>
         </div>

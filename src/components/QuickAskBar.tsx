@@ -105,17 +105,17 @@ export function QuickAskBar() {
     <div className="w-full flex flex-col gap-2 pointer-events-auto">
       {/* Response speech bubble if active */}
       {latestResponse && (
-        <div className="cyber-glass rounded-xl p-3 border border-pale-600/30 text-xs text-stone-200 shadow-xl flex items-start gap-2.5 animate-fade-in">
-          <Sparkles className="w-4 h-4 text-pale-300 shrink-0 mt-0.5" />
+        <div className="cyber-glass rounded-xl p-3 text-xs text-stone-200 shadow-xl flex items-start gap-2.5 animate-fade-in">
+          <Sparkles className="w-4 h-4 text-accent-300 shrink-0 mt-0.5" />
           <div className="flex-1 leading-relaxed">
-            <p className="font-semibold text-pale-300 text-[11px] mb-0.5">Campus Copilot:</p>
+            <p className="font-semibold text-accent-300 text-[11px] mb-0.5">Campus Copilot:</p>
             <p className="line-clamp-4">{latestResponse}</p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {isPlayingAudio ? (
               <button
                 onClick={stopAudio}
-                className="p-1 rounded text-pale-300 hover:text-white"
+                className="p-1 rounded text-accent-300 hover:text-white"
                 title="Pausar voz"
               >
                 <Pause className="w-3.5 h-3.5" />
@@ -123,7 +123,7 @@ export function QuickAskBar() {
             ) : (
               <button
                 onClick={() => playVoice(latestResponse)}
-                className="p-1 rounded text-stone-400 hover:text-pale-300"
+                className="p-1 rounded text-stone-400 hover:text-accent-300"
                 title="Escuchar respuesta"
               >
                 <Volume2 className="w-3.5 h-3.5" />
@@ -141,8 +141,8 @@ export function QuickAskBar() {
       )}
 
       {/* Quick Input Bar */}
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 bg-stone-950/80 backdrop-blur-md rounded-xl p-1.5 border border-white/[0.08] shadow-lg">
-        <div className="pl-2.5 text-pale-400">
+      <form onSubmit={handleSubmit} className="flex items-center gap-2 bg-stone-900/70 backdrop-blur-xl rounded-xl p-1.5 border border-white/[0.1] shadow-lg">
+        <div className="pl-2.5 text-accent-400">
           <Sparkles className="w-4 h-4" />
         </div>
         <input
@@ -156,7 +156,7 @@ export function QuickAskBar() {
         <button
           type="submit"
           disabled={!input.trim() || loading}
-          className="w-8 h-8 rounded-lg bg-pale-700 hover:bg-pale-600 disabled:opacity-40 disabled:hover:bg-pale-700 text-pale-200 flex items-center justify-center transition-colors cursor-pointer"
+          className="w-8 h-8 rounded-lg bg-accent-500 hover:bg-accent-400 disabled:opacity-40 text-white flex items-center justify-center transition-colors cursor-pointer"
           title="Preguntar"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}

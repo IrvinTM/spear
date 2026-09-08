@@ -6,7 +6,7 @@ import { LiveToggle } from './client';
 export const dynamic = 'force-dynamic';
 
 const levelClass = {
-  info: 'text-accent-400 bg-accent-500/10',
+  info: 'text-accent-300 bg-accent-500/15',
   warning: 'text-warning bg-warning/10',
   error: 'text-danger bg-danger/10',
 };
@@ -32,12 +32,12 @@ export default async function LogsPage() {
           {/* Mobile Card List (md:hidden) */}
           <div className="flex flex-col gap-2.5 md:hidden">
             {logs.map((log) => (
-              <div key={log.id} className="bg-stone-900 border border-white/[0.06] rounded-xl p-3.5 space-y-2 text-xs">
+              <div key={log.id} className="bg-stone-900/95 border border-white/[0.08] rounded-xl p-3.5 space-y-2 text-xs">
                 <div className="flex items-center justify-between gap-2">
                   <span className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-medium ${levelClass[log.level]}`}>
                     {log.level}
                   </span>
-                  <span className="text-[11px] text-stone-400 font-medium px-1.5 py-0.5 rounded bg-stone-800">
+                  <span className="text-[11px] text-stone-400 font-medium px-1.5 py-0.5 rounded-md bg-white/[0.06]">
                     {log.category.replace('_', ' ')}
                   </span>
                   <span className="text-[10px] text-stone-500 ml-auto whitespace-nowrap">
@@ -71,7 +71,7 @@ export default async function LogsPage() {
           </div>
 
           {/* Desktop Table View (hidden md:block) */}
-          <div className="hidden md:block overflow-x-auto bg-stone-900 border border-white/[0.06] rounded-xl">
+          <div className="hidden md:block overflow-x-auto bg-stone-900/95 border border-white/[0.08] rounded-xl">
             <table className="w-full text-left text-sm">
               <thead className="text-xs text-stone-500 border-b border-white/[0.06]">
                 <tr>

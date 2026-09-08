@@ -6,9 +6,9 @@ import { AlertBanner } from '@/components/AlertBanner';
 import type { AppSettings } from '@/lib/settings';
 
 const inputClass =
-  'w-full px-4 py-3 rounded-lg bg-stone-950 border border-white/10 text-stone-50 text-base sm:text-sm outline-none placeholder:text-stone-500 transition-all focus:border-accent-500 focus:ring-[3px] focus:ring-accent-500/15';
+  'w-full px-4 py-3 rounded-lg bg-stone-950/80 border border-white/[0.1] text-stone-50 text-base sm:text-sm outline-none placeholder:text-stone-500 transition-all focus:border-accent-400/60 focus:ring-2 focus:ring-accent-500/25';
 
-const labelClass = 'text-sm font-medium text-stone-400 tracking-wide';
+const labelClass = 'text-sm font-medium text-stone-300';
 
 export function SettingsClient({ initialSettings }: { initialSettings: AppSettings }) {
   const [settings, setSettings] = useState(initialSettings);
@@ -64,7 +64,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
       {feedback && <AlertBanner variant={feedback.type} message={feedback.message} />}
 
       {/* Appearance Section */}
-      <div className="bg-stone-900 border border-white/[0.06] rounded-xl p-6 shadow-sm mb-6">
+      <div className="bg-stone-900/95 border border-white/[0.08] rounded-xl p-6 shadow-sm mb-6">
         <h2 className="text-base font-semibold mb-1">Appearance</h2>
         <p className="text-xs text-stone-500 mb-6">Customize your dashboard character.</p>
         
@@ -90,7 +90,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
               type="checkbox"
               checked={settings.hideCharacter || false}
               onChange={(e) => update('hideCharacter', e.target.checked as any)}
-              className="w-4 h-4 rounded border-white/10 bg-stone-950 text-accent-500 focus:ring-accent-500/15 focus:ring-[3px] outline-none"
+              className="w-4 h-4 rounded border-white/10 bg-stone-950 text-accent-500 focus:ring-accent-500/25 focus:ring-2 outline-none"
             />
             <span className={labelClass}>Hide Character</span>
           </label>
@@ -154,7 +154,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
       </div>
 
       {/* TTS Section */}
-      <div className="bg-stone-900 border border-white/[0.06] rounded-xl p-6 shadow-sm mb-6">
+      <div className="bg-stone-900/95 border border-white/[0.08] rounded-xl p-6 shadow-sm mb-6">
         <h2 className="text-base font-semibold mb-1">Text-to-Speech</h2>
         <p className="text-xs text-stone-500 mb-6">Configure how Campus Copilot speaks.</p>
 
@@ -168,8 +168,8 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
                 onClick={() => update('tts.provider', p)}
                 className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border transition-all cursor-pointer ${
                   settings.tts.provider === p
-                    ? 'bg-accent-600 text-white border-accent-700 shadow-sm'
-                    : 'bg-stone-800 text-stone-400 border-white/[0.06] hover:bg-stone-700 hover:text-stone-200'
+                    ? 'bg-accent-500 text-white border-accent-500'
+                    : 'bg-white/[0.05] text-stone-400 border-white/[0.08] hover:bg-white/[0.09] hover:text-stone-200'
                 }`}
               >
                 {p === 'piper' ? 'Piper (Local)' : 'Google Cloud TTS'}
@@ -180,7 +180,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
 
         {/* Piper settings */}
         {settings.tts.provider === 'piper' && (
-          <div className="flex flex-col gap-4 p-4 rounded-lg bg-stone-950 border border-white/[0.04]">
+          <div className="flex flex-col gap-4 p-4 rounded-xl bg-stone-950/70 border border-white/[0.06]">
             <div className="flex flex-col gap-2">
               <label className={labelClass}>Piper binary path</label>
               <input
@@ -206,7 +206,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
 
         {/* Google TTS settings */}
         {settings.tts.provider === 'google' && (
-          <div className="flex flex-col gap-4 p-4 rounded-lg bg-stone-950 border border-white/[0.04]">
+          <div className="flex flex-col gap-4 p-4 rounded-xl bg-stone-950/70 border border-white/[0.06]">
             <div className="flex flex-col gap-2">
               <label className={labelClass}>Model</label>
               <input
@@ -283,7 +283,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
       </div>
 
       {/* Credentials Section */}
-      <div className="bg-stone-900 border border-white/[0.06] rounded-xl p-6 shadow-sm mb-6">
+      <div className="bg-stone-900/95 border border-white/[0.08] rounded-xl p-6 shadow-sm mb-6">
         <h2 className="text-base font-semibold mb-1">Credentials</h2>
         <p className="text-xs text-stone-500 mb-6">Update your Moodle and Gmail credentials. Enter your master password to unlock.</p>
         <CredentialsEditor />
@@ -293,7 +293,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: AppSettin
       <button
         onClick={handleSave}
         disabled={isSaving}
-        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-accent-600 text-white text-sm font-medium border border-accent-700 shadow-sm hover:bg-accent-500 hover:shadow-glow hover:-translate-y-px active:bg-accent-700 active:translate-y-0 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-accent-500 text-white text-sm font-medium hover:bg-accent-400 active:bg-accent-600 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {isSaving ? (
           <>
@@ -378,7 +378,7 @@ function CredentialsEditor() {
           <button
             onClick={handleUnlock}
             disabled={isPending || !masterPassword.trim()}
-            className="px-4 py-2.5 rounded-lg bg-stone-700 text-stone-200 text-sm font-medium border border-white/[0.06] hover:bg-stone-600 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            className="px-4 py-2.5 rounded-lg bg-white/[0.06] text-stone-100 text-sm font-medium border border-white/[0.1] hover:bg-white/[0.1] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             {isPending ? <span className="spinner spinner--sm" /> : 'Unlock'}
           </button>
@@ -389,7 +389,7 @@ function CredentialsEditor() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 rounded-lg bg-stone-950 border border-white/[0.04]">
+    <div className="flex flex-col gap-4 p-4 rounded-xl bg-stone-950/70 border border-white/[0.06]">
       <div className="flex flex-col gap-2">
         <label className={labelClass}>UES Username</label>
         <input
@@ -428,7 +428,7 @@ function CredentialsEditor() {
       <button
         onClick={handleSave}
         disabled={isPending}
-        className="self-start inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-600 text-white text-sm font-medium border border-accent-700 hover:bg-accent-500 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="self-start inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-500 text-white text-sm font-medium hover:bg-accent-400 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {isPending ? <><span className="spinner spinner--sm" /> Saving...</> : 'Update credentials'}
       </button>

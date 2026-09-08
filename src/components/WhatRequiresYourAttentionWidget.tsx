@@ -105,7 +105,7 @@ export function WhatRequiresYourAttentionWidget() {
   if (loading && !data) {
     return (
       <div className="flex items-center justify-center p-3">
-        <div className="bg-stone-900/90 border border-stone-800 rounded-xl px-4 py-2.5 flex items-center gap-2.5 text-xs text-stone-400 shadow-sm">
+        <div className="bg-stone-900/90 border border-white/[0.08] rounded-xl px-4 py-2.5 flex items-center gap-2.5 text-xs text-stone-400 shadow-sm">
           <span className="spinner spinner--sm" />
           <span>Analizando Orientaciones Académicas...</span>
         </div>
@@ -124,13 +124,13 @@ export function WhatRequiresYourAttentionWidget() {
       <div className="flex items-center justify-center w-full my-2 pointer-events-auto relative z-20">
         <button
           onClick={handleToggleHide}
-          className="group flex items-center gap-2 px-4 py-2 rounded-full bg-stone-900/95 hover:bg-stone-800 border border-stone-700 text-stone-200 text-xs transition-all shadow-lg backdrop-blur-md cursor-pointer active:scale-95"
+          className="group flex items-center gap-2 px-4 py-2 rounded-full bg-stone-900/90 hover:bg-stone-800 border border-white/[0.1] text-stone-200 text-xs transition-all shadow-lg backdrop-blur-md cursor-pointer active:scale-95"
           title="Mostrar widget de atención"
         >
           <span className="w-2 h-2 rounded-full bg-stone-400 group-hover:bg-accent-400 transition-colors" />
           <span className="font-medium">What Requires Your Attention</span>
           {totalPending > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full bg-stone-800 text-stone-400 border border-stone-700 text-[10px]">
+            <span className="px-1.5 py-0.5 rounded-full bg-white/[0.06] text-stone-300 border border-white/[0.08] text-[10px]">
               {totalPending}
             </span>
           )}
@@ -149,12 +149,12 @@ export function WhatRequiresYourAttentionWidget() {
     return (
       <div
         key={`${ev.courseId}-${ev.title}-${ev.id}`}
-        className="rounded-xl p-3.5 bg-stone-950/40 hover:bg-stone-950/60 border border-stone-800/70 hover:border-stone-700/80 transition-colors"
+        className="rounded-xl p-3.5 bg-stone-950/40 hover:bg-stone-900/50 border border-white/[0.06] hover:border-white/[0.1] transition-colors"
       >
         <div className="flex flex-wrap items-start justify-between gap-2 mb-1.5">
           {/* Left: Type badge + Course Name + Weight */}
           <div className="flex items-center flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-stone-800 text-stone-300 border border-stone-700/70 text-[11px] font-medium">
+            <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-md bg-white/[0.06] text-stone-200 border border-white/[0.08] text-[11px] font-medium">
               <span>{type.icon}</span>
               <span>{type.label}</span>
             </span>
@@ -164,7 +164,7 @@ export function WhatRequiresYourAttentionWidget() {
             </span>
 
             {ev.weight && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-stone-800/90 text-stone-300 border border-stone-700/60">
+              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-white/[0.06] text-stone-200 border border-white/[0.08]">
                 {ev.weight}
               </span>
             )}
@@ -173,7 +173,7 @@ export function WhatRequiresYourAttentionWidget() {
           {/* Right: Week indicator or Dismiss */}
           <div className="flex items-center gap-2 ml-auto">
             {ev.weekNumber && (
-              <span className="text-[11px] text-stone-400 font-medium bg-stone-900 px-2 py-0.5 rounded border border-stone-800">
+              <span className="text-[11px] text-stone-400 font-medium bg-stone-950 px-2 py-0.5 rounded-md border border-white/[0.06]">
                 Semana {ev.weekNumber}
               </span>
             )}
@@ -200,7 +200,7 @@ export function WhatRequiresYourAttentionWidget() {
         )}
 
         {/* Date & Metadata */}
-        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-400 pt-1.5 border-t border-white/[0.04]">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-400 pt-1.5 border-t border-white/[0.05]">
           <div className="flex items-center gap-1.5 text-stone-300">
             <Calendar className="w-3.5 h-3.5 text-stone-400" />
             <span>{ev.dateLabel}</span>
@@ -228,9 +228,9 @@ export function WhatRequiresYourAttentionWidget() {
   return (
     <div className="w-full max-w-3xl mx-auto my-2 px-2 animate-fade-in relative z-20 pointer-events-auto">
       {/* Main Container Card — Muted, refined stone dark theme */}
-      <div className="rounded-2xl bg-stone-900/95 border border-stone-800/90 p-5 shadow-xl backdrop-blur-md transition-all">
+      <div className="rounded-2xl bg-stone-900/85 border border-white/[0.08] p-5 shadow-xl backdrop-blur-xl transition-all">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-stone-800/80">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
             <AlertCircle className="w-5 h-5 text-accent-400" />
             <div>
@@ -238,7 +238,7 @@ export function WhatRequiresYourAttentionWidget() {
                 <h3 className="text-sm font-semibold text-stone-100 tracking-tight">
                   What Requires Your Attention
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-stone-800 text-stone-400 border border-stone-700/60">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/[0.06] text-stone-300 border border-white/[0.08]">
                   {totalPending} pendientes
                 </span>
               </div>
@@ -254,7 +254,7 @@ export function WhatRequiresYourAttentionWidget() {
             <button
               onClick={handleManualRefresh}
               disabled={isRefreshing}
-              className="p-1.5 rounded-lg bg-stone-800/80 hover:bg-stone-700/80 text-stone-400 hover:text-stone-200 border border-stone-700/60 transition-colors cursor-pointer disabled:opacity-50 text-xs"
+              className="p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.08] text-stone-400 hover:text-stone-200 border border-white/[0.08] transition-colors cursor-pointer disabled:opacity-50 text-xs"
               title="Re-analizar Orientaciones Académicas"
             >
               {isRefreshing ? <span className="spinner spinner--sm" /> : <RotateCw className="w-3.5 h-3.5" />}
@@ -263,7 +263,7 @@ export function WhatRequiresYourAttentionWidget() {
             {/* Hide button */}
             <button
               onClick={handleToggleHide}
-              className="px-2.5 py-1 rounded-lg bg-stone-800/80 hover:bg-stone-700/80 text-stone-300 border border-stone-700/60 text-xs transition-colors cursor-pointer flex items-center gap-1.5 font-medium"
+              className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.08] text-stone-200 border border-white/[0.08] text-xs transition-colors cursor-pointer flex items-center gap-1.5 font-medium"
               title="Ocultar widget"
             >
               <EyeOff className="w-3.5 h-3.5 text-stone-400" />
@@ -274,7 +274,7 @@ export function WhatRequiresYourAttentionWidget() {
 
         {/* AI Briefing Summary */}
         {data?.summary && (
-          <div className="mt-3.5 mb-4 p-3 rounded-xl bg-stone-950/40 border border-stone-800/70 text-xs text-stone-300 flex items-start gap-2.5 leading-relaxed">
+          <div className="mt-3.5 mb-4 p-3 rounded-xl bg-stone-950/50 border border-white/[0.06] text-xs text-stone-300 flex items-start gap-2.5 leading-relaxed">
             <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
             <div className="flex-1 text-stone-300">
               <span className="font-medium text-stone-200">Resumen: </span>
@@ -299,7 +299,7 @@ export function WhatRequiresYourAttentionWidget() {
 
           <div className="space-y-2">
             {thisWeekList.length === 0 ? (
-              <div className="text-xs text-stone-400 bg-stone-950/30 rounded-xl p-3 border border-stone-800/50 italic">
+              <div className="text-xs text-stone-400 bg-stone-950/40 rounded-xl p-3 border border-white/[0.05] italic">
                 No hay exámenes ni tareas fijadas para esta semana. Buen momento para preparar las evaluaciones de la próxima semana.
               </div>
             ) : (
@@ -309,7 +309,7 @@ export function WhatRequiresYourAttentionWidget() {
         </div>
 
         {/* DIVIDER */}
-        <div className="border-t border-stone-800/70 my-4" />
+        <div className="border-t border-white/[0.06] my-4" />
 
         {/* SECTION 2: UPCOMING / FOLLOWING WEEKS */}
         <div>
@@ -330,7 +330,7 @@ export function WhatRequiresYourAttentionWidget() {
 
           <div className="space-y-2">
             {displayedUpcoming.length === 0 ? (
-              <div className="text-xs text-stone-400 bg-stone-950/30 rounded-xl p-3 border border-stone-800/50 italic">
+              <div className="text-xs text-stone-400 bg-stone-950/40 rounded-xl p-3 border border-white/[0.05] italic">
                 No hay evaluaciones próximas registradas.
               </div>
             ) : (
@@ -341,7 +341,7 @@ export function WhatRequiresYourAttentionWidget() {
 
         {/* Footer */}
         {upcomingList.length > 3 && (
-          <div className="mt-3 pt-2 border-t border-stone-800/50 flex justify-end">
+          <div className="mt-3 pt-2 border-t border-white/[0.05] flex justify-end">
             <button
               onClick={() => setShowAllUpcoming(!showAllUpcoming)}
               className="text-xs text-stone-400 hover:text-stone-200 transition-colors cursor-pointer inline-flex items-center gap-1"

@@ -2,69 +2,75 @@
 
 /* ============================================================
    Spear — Tailwind v4 Theme
+   Apple HIG-inspired design system:
+   - System font stack (SF Pro on Apple devices, fallback elsewhere)
+   - Semantic neutral scale (dark graphite, one accent)
+   - Layered materials: hairline borders + quiet translucency
+   - Calm, purposeful motion
    ============================================================ */
 
 @theme {
-  /* Colors — warm neutral palette */
-  --color-stone-50: #fafaf9;
-  --color-stone-100: #f5f5f4;
-  --color-stone-200: #e7e5e4;
-  --color-stone-300: #d6d3d1;
-  --color-stone-400: #a8a29e;
-  --color-stone-500: #78716c;
-  --color-stone-600: #57534e;
-  --color-stone-700: #44403c;
-  --color-stone-800: #292524;
-  --color-stone-900: #1c1917;
-  --color-stone-950: #0c0a09;
+  /* Graphite — primary neutral scale (cool, refined dark) */
+  --color-stone-50: #f5f5f7;
+  --color-stone-100: #e8e8ed;
+  --color-stone-200: #d1d1d7;
+  --color-stone-300: #a1a1a8;
+  --color-stone-400: #7c7c85;
+  --color-stone-500: #5c5c66;
+  --color-stone-600: #42424b;
+  --color-stone-700: #33333b;
+  --color-stone-800: #26262d;
+  --color-stone-900: #1c1c21;
+  --color-stone-950: #101014;
 
-  /* Accent — teal (used for glass glows & indicators) */
-  --color-accent-50: #f0fdfa;
-  --color-accent-100: #ccfbf1;
-  --color-accent-200: #99f6e4;
-  --color-accent-300: #5eead4;
-  --color-accent-400: #2dd4bf;
-  --color-accent-500: #14b8a6;
-  --color-accent-600: #0d9488;
-  --color-accent-700: #0f766e;
-  --color-accent-800: #115e59;
-  --color-accent-900: #134e4a;
+  /* Accent — a single system blue (interactive elements only) */
+  --color-accent-50: #eef4ff;
+  --color-accent-100: #d9e6ff;
+  --color-accent-200: #bcd3ff;
+  --color-accent-300: #8eb5ff;
+  --color-accent-400: #5992ff;
+  --color-accent-500: #2d6ff5;
+  --color-accent-600: #1a58d8;
+  --color-accent-700: #1447ae;
+  --color-accent-800: #123a8a;
+  --color-accent-900: #123272;
 
-  /* Palenight — buttons & interactive surfaces */
-  --color-pale-300: #A6ACCD;
-  --color-pale-400: #8087A2;
-  --color-pale-500: #697098;
-  --color-pale-600: #4E5579;
-  --color-pale-700: #3C435E;
-  --color-pale-800: #292D3E;
-  --color-pale-900: #1B1E2B;
+  /* Palenight scale retired — mapped to graphite for smooth migration */
+  --color-pale-300: #a1a1a8;
+  --color-pale-400: #7c7c85;
+  --color-pale-500: #5c5c66;
+  --color-pale-600: #42424b;
+  --color-pale-700: #33333b;
+  --color-pale-800: #26262d;
+  --color-pale-900: #1c1c21;
 
-  /* Status colors */
-  --color-success: #22c55e;
-  --color-success-muted: #166534;
-  --color-warning: #f59e0b;
-  --color-warning-muted: #92400e;
-  --color-danger: #ef4444;
-  --color-danger-muted: #991b1b;
-  --color-info: #3b82f6;
-  --color-info-muted: #1e40af;
+  /* Status colors — used sparingly, for status only */
+  --color-success: #30d158;
+  --color-success-muted: #1d7a3a;
+  --color-warning: #ffd60a;
+  --color-warning-muted: #8a6d00;
+  --color-danger: #ff453a;
+  --color-danger-muted: #a32521;
+  --color-info: #5992ff;
+  --color-info-muted: #1a58d8;
 
-  /* Fonts */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* Fonts — SF Pro on Apple platforms, system stack elsewhere */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
+    'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 
-  /* Animations */
-  --animate-fade-in: fade-in 0.4s ease both;
-  --animate-slide-up: slide-up 0.5s ease both;
+  /* Animations — brief, precise, purposeful */
+  --animate-fade-in: fade-in 0.28s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  --animate-slide-up: slide-up 0.32s cubic-bezier(0.25, 0.1, 0.25, 1) both;
   --animate-spin-slow: spin 0.7s linear infinite;
 
   @keyframes fade-in {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes slide-up {
-    from { opacity: 0; transform: translateY(16px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
 }
@@ -88,23 +94,18 @@
     background: var(--color-stone-950);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
   }
 
-  /* Subtle noise texture overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.025;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 256px;
+  /* Focus ring — consistent, keyboard-visible */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-400);
+    outline-offset: 2px;
   }
 }
 
 /* ============================================================
-   Component Styles (things hard to express purely in utilities)
+   Component Styles
    ============================================================ */
 
 @layer components {
@@ -116,55 +117,54 @@
   .pw-bar--fair { background: var(--color-warning); }
   .pw-bar--good { background: var(--color-success); }
 
-  /* Stepper connector */
+  /* Stepper */
   .stepper-connector {
     @apply flex-1 h-0.5 rounded-full bg-stone-700 min-w-5 transition-colors duration-200;
   }
   .stepper-connector--done {
-    background: var(--color-accent-600);
+    background: var(--color-accent-500);
   }
 
-  /* Stepper step dot */
   .step-dot {
-    @apply flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold shrink-0 transition-all duration-200;
+    @apply flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium shrink-0 transition-all duration-200;
   }
   .step-dot--done {
-    @apply bg-accent-600 text-white;
+    @apply bg-accent-500 text-white;
   }
   .step-dot--active {
     @apply bg-accent-500 text-white;
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.25);
+    box-shadow: 0 0 0 4px rgba(45, 111, 245, 0.2);
   }
   .step-dot--pending {
-    @apply bg-stone-700 text-stone-500 border border-stone-600;
+    @apply bg-stone-800 text-stone-400 border border-stone-700;
   }
 
-  /* Cyberpunk glass panel */
+  /* Material — quiet translucent panel (replaces cyber-glass).
+     Layered surface: soft blur, opaque-enough fill, hairline border. */
   .cyber-glass {
-    background: rgba(12, 10, 9, 0.55);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(20, 184, 166, 0.15);
+    background: rgba(28, 28, 33, 0.72);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow:
-      0 0 20px rgba(20, 184, 166, 0.06),
-      inset 0 1px 0 rgba(255, 255, 255, 0.04),
-      inset 0 -1px 0 rgba(20, 184, 166, 0.05);
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
-  /* Glow shadow for primary buttons */
+  /* Primary button emphasis — restrained, no glow */
   .shadow-glow {
-    box-shadow: 0 0 20px rgba(20, 184, 166, 0.15);
+    box-shadow: 0 4px 12px rgba(45, 111, 245, 0.25);
   }
 
-  /* Status dot with glow */
+  /* Status indicators — small quiet halos only */
   .status-glow-success {
-    box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 4px rgba(48, 209, 88, 0.35);
   }
   .status-glow-warning {
-    box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 4px rgba(255, 214, 10, 0.35);
   }
   .status-glow-danger {
-    box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+    box-shadow: 0 0 4px rgba(255, 69, 58, 0.35);
   }
 
   /* Spinner */

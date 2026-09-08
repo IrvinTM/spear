@@ -26,12 +26,12 @@ export function CourseSummaryClient({ courseId, rawSummary }: { courseId: number
   return (
     <details className="mb-4 group">
       <summary className="cursor-pointer text-sm font-medium text-accent-400 hover:text-accent-300 list-none flex items-center gap-2">
-        <span className="w-4 h-4 inline-flex items-center justify-center bg-accent-500/10 rounded group-open:rotate-90 transition-transform">
+        <span className="w-4 h-4 inline-flex items-center justify-center bg-accent-500/15 rounded-md group-open:rotate-90 transition-transform">
           <ChevronRight className="w-3.5 h-3.5" />
         </span>
         Ver resumen
       </summary>
-      <div className="mt-3 p-4 bg-stone-950/50 rounded-lg border border-white/[0.04] text-sm text-stone-300 leading-relaxed">
+      <div className="mt-3 p-4 bg-stone-950/50 rounded-xl border border-white/[0.06] text-sm text-stone-300 leading-relaxed">
         {summary ? (
           <div className="whitespace-pre-wrap">{summary}</div>
         ) : isRaw ? (
@@ -40,7 +40,7 @@ export function CourseSummaryClient({ courseId, rawSummary }: { courseId: number
             <button 
               onClick={handleGenerate}
               disabled={isLoading}
-              className="inline-flex items-center gap-1.5 bg-accent-600 hover:bg-accent-500 disabled:opacity-50 text-white text-xs px-3 py-1.5 rounded font-medium transition-colors">
+              className="inline-flex items-center gap-1.5 bg-accent-500 hover:bg-accent-400 disabled:opacity-40 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-colors">
               {isLoading ? 'Generando...' : (
                 <>
                   <Sparkles className="w-3.5 h-3.5" />
@@ -48,7 +48,7 @@ export function CourseSummaryClient({ courseId, rawSummary }: { courseId: number
                 </>
               )}
             </button>
-            {error && <p className="text-red-400 text-xs">{error}</p>}
+            {error && <p className="text-danger text-xs">{error}</p>}
           </div>
         ) : (
           <p className="text-stone-500 italic">No hay información suficiente para generar un resumen.</p>
