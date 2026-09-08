@@ -13,6 +13,17 @@ ALWAYS use `pnpm` for all package installations and script executions. Do not us
 
 ---
 
+# Protected Processes — DO NOT TOUCH
+
+> [!CAUTION]
+> **NEVER stop, kill, or interfere with the `t3 serve` instances on the development machine.**
+> T3 Code (`t3 serve` / `npm exec t3 serve [--host ...]`) is the active development environment currently in use. It must keep running at all times.
+> - Do NOT kill, pkill, or terminate any `t3` process.
+> - Do NOT run blanket process kills on the dev machine (e.g., `pkill -f node`, `pkill -f next-server` in a way that could match other processes).
+> - When freeing memory before builds, only terminate processes you started yourself, and verify the PID/command first.
+
+---
+
 # Architecture & VM Setup
 
 The application is deployed on a dedicated Google Cloud Platform (GCP) Compute Engine virtual machine:
@@ -48,9 +59,10 @@ Before compiling, verify available memory in your development container:
 ```bash
 free -m
 ```
-If memory is low (< 2 GB available), terminate any stale dev servers or zombie node processes:
+If memory is low (< 2 GB available), terminate only stale dev servers or zombie node processes **that you started yourself**. Never use blanket process kills — see "Protected Processes" above. Verify each PID before terminating:
 ```bash
-pkill -f "next-server" || true
+pgrep -af "next dev|next-server"   # inspect first, confirm it is NOT a t3 process
+kill <verified-pid>
 ```
 Then create the optimized production build:
 ```bash
