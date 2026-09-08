@@ -67,7 +67,7 @@ export function SyncBriefing({ expanded = true }: { expanded?: boolean }) {
   };
 
   return (
-    <div className="cyber-glass rounded-xl p-4 animate-fade-in relative overflow-hidden">
+    <div className="cyber-glass rounded-xl p-4 animate-fade-in relative overflow-hidden pointer-events-auto z-10">
       <div className="absolute bottom-0 right-0 w-20 h-20 bg-accent-400/5 rounded-tl-full blur-2xl pointer-events-none" />
       {/* Play controls — always visible */}
       <div className="flex items-center gap-3 relative z-10">

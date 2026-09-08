@@ -38,7 +38,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <>
       {/* Mobile Flow for Todo Tab: Attention and Briefings in document scroll */}
       {isTodoTab && (
-        <div className="md:hidden w-full flex flex-col gap-4 mb-6">
+        <div className="md:hidden w-full flex flex-col gap-4 mb-6 relative z-20 pointer-events-auto">
           <WhatRequiresYourAttentionWidget />
           <CalendarWidget />
           <ActiveHomeworksWidget />
@@ -55,12 +55,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       {children}
 
-      {/* Desktop: What Requires Your Attention Widget (Centered, pinned at top) */}
+      {/* Desktop: What Requires Your Attention Widget (Left/Center area, next to avatar) */}
       {isTodoTab && (
-        <div className={`hidden md:flex fixed top-4 z-30 transition-all duration-300 pointer-events-none justify-center ${
-          collapsed ? 'left-0 right-0' : 'left-60 right-0'
-        } px-4`}>
-          <div className="pointer-events-auto w-full max-w-2xl xl:max-w-3xl max-h-[calc(100vh-8rem)] overflow-y-auto pr-1">
+        <div className={`hidden md:flex fixed top-4 z-30 transition-all duration-300 pointer-events-none ${
+          collapsed ? 'left-8' : 'left-[calc(15rem+2rem)]'
+        } max-w-2xl xl:max-w-3xl pr-4`}>
+          <div className="pointer-events-auto w-full max-h-[calc(100vh-14rem)] overflow-y-auto pr-1">
             <WhatRequiresYourAttentionWidget />
           </div>
         </div>
@@ -68,7 +68,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       {/* Desktop Left side: Briefing panels (Only visible on Todo tab) */}
       {isTodoTab && (
-        <div className={`hidden md:block fixed bottom-20 z-30 w-[300px] transition-all duration-300 max-lg:left-6 max-lg:w-[280px] ${collapsed ? 'left-6' : 'left-[calc(15rem+1.5rem)]'}`}>
+        <div className={`hidden md:block fixed bottom-28 z-30 w-[300px] transition-all duration-300 max-lg:left-6 max-lg:w-[280px] ${collapsed ? 'left-8' : 'left-[calc(15rem+2rem)]'}`}>
           <div className="flex flex-col gap-2">
             <CalendarWidget />
             <ActiveHomeworksWidget />
@@ -86,7 +86,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       {/* Desktop Right side: Chat panel */}
       <div
-        className={`hidden md:block fixed bottom-20 right-6 z-40 w-[380px] max-lg:w-[320px] transition-all duration-300 ${
+        className={`hidden md:block fixed bottom-28 right-6 z-40 w-[360px] max-lg:w-[320px] transition-all duration-300 ${
           chatExpanded ? 'h-[500px]' : 'h-auto'
         }`}
       >
@@ -110,7 +110,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {isTodoTab && (
         <>
           <div
-            className={`hidden md:block fixed bottom-20 right-[calc(380px+3rem)] z-40 w-[400px] max-lg:right-6 max-lg:bottom-[calc(4rem+60px)] cyber-glass rounded-xl shadow-2xl overflow-hidden transition-all duration-300 ${
+            className={`hidden md:block fixed bottom-28 right-[calc(360px+2rem)] z-40 w-[400px] max-lg:right-6 max-lg:bottom-[calc(4rem+60px)] cyber-glass rounded-xl shadow-2xl overflow-hidden transition-all duration-300 ${
               activityOpen
                 ? 'opacity-100 pointer-events-auto translate-y-0 scale-100'
                 : 'opacity-0 pointer-events-none translate-y-4 scale-95'
@@ -138,7 +138,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {/* Desktop Activity FAB */}
           <button
             onClick={() => setActivityOpen((v) => !v)}
-            className={`hidden md:flex fixed bottom-6 right-[calc(380px+3rem)] max-lg:right-6 max-lg:bottom-[calc(4rem+60px)] z-50 w-10 h-10 rounded-full items-center justify-center text-lg shadow-lg border transition-all cursor-pointer hover:-translate-y-0.5 ${
+            className={`hidden md:flex fixed bottom-12 right-[calc(360px+2rem)] max-lg:right-6 max-lg:bottom-[calc(4rem+60px)] z-50 w-10 h-10 rounded-full items-center justify-center text-lg shadow-lg border transition-all cursor-pointer hover:-translate-y-0.5 ${
               activityOpen
                 ? 'bg-pale-700 border-pale-600 shadow-[0_0_15px_rgba(166,172,205,0.15)]'
                 : 'bg-stone-950/60 backdrop-blur-xl border-pale-700/40 hover:bg-pale-800/60 hover:border-pale-500/40 hover:shadow-[0_0_12px_rgba(166,172,205,0.1)]'
@@ -155,7 +155,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {isTodoTab && (
           <button
             onClick={() => setActivityOpen(true)}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-stone-900/90 border border-pale-700/40 text-pale-300 shadow-lg backdrop-blur-md active:scale-95 transition-transform"
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-stone-900/90 border border-pale-700/40 text-pale-300 shadow-lg backdrop-blur-md active:scale-95 transition-transform cursor-pointer"
             title="Activity"
           >
             <Radio className="w-4 h-4 text-emerald-400" />
@@ -163,56 +163,52 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
         <button
           onClick={() => setMobileChatOpen(true)}
-          className="w-11 h-11 rounded-full flex items-center justify-center bg-pale-800 border border-pale-500/50 text-pale-200 shadow-xl backdrop-blur-md active:scale-95 transition-transform"
+          className="w-11 h-11 rounded-full flex items-center justify-center bg-pale-800 border border-pale-500/50 text-pale-200 shadow-xl backdrop-blur-md active:scale-95 transition-transform cursor-pointer"
           title="Copilot Chat"
         >
           <Bot className="w-5 h-5 text-pale-300" />
         </button>
       </div>
 
-      {/* Mobile Copilot Chat Bottom Sheet */}
-      {mobileChatOpen && (
-        <div className="fixed inset-x-3 bottom-20 top-16 z-50 cyber-glass rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-pale-700/40 md:hidden animate-fade-in">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-accent-500/10 bg-stone-950/80">
-            <div className="flex items-center gap-2">
-              <Bot className="w-4 h-4 text-pale-300" />
-              <h3 className="text-sm font-semibold text-stone-100">Campus Copilot</h3>
-            </div>
-            <button
-              onClick={() => setMobileChatOpen(false)}
-              className="w-7 h-7 flex items-center justify-center rounded-md text-stone-400 hover:text-white transition-colors"
-              title="Cerrar chat"
-            >
-              <X className="w-4 h-4" />
-            </button>
+      {/* Mobile Copilot Chat Bottom Sheet (Kept mounted to preserve chat state) */}
+      <div className={`fixed inset-x-3 bottom-20 top-16 z-50 cyber-glass rounded-2xl shadow-2xl flex-col overflow-hidden border border-pale-700/40 md:hidden animate-fade-in ${mobileChatOpen ? 'flex' : 'hidden'}`}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-accent-500/10 bg-stone-950/80">
+          <div className="flex items-center gap-2">
+            <Bot className="w-4 h-4 text-pale-300" />
+            <h3 className="text-sm font-semibold text-stone-100">Campus Copilot</h3>
           </div>
-          <div className="flex-1 min-h-0 bg-stone-950/40">
-            <CopilotChat expanded={true} />
-          </div>
+          <button
+            onClick={() => setMobileChatOpen(false)}
+            className="w-7 h-7 flex items-center justify-center rounded-md text-stone-400 hover:text-white transition-colors cursor-pointer"
+            title="Cerrar chat"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
-      )}
+        <div className="flex-1 min-h-0 bg-stone-950/40">
+          <CopilotChat expanded={true} />
+        </div>
+      </div>
 
-      {/* Mobile Activity Bottom Sheet */}
-      {activityOpen && (
-        <div className="fixed inset-x-3 bottom-20 top-16 z-50 cyber-glass rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-pale-700/40 md:hidden animate-fade-in">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-accent-500/10 bg-stone-950/80">
-            <div className="flex items-center gap-2">
-              <Radio className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-sm font-semibold text-stone-100">Live Activity</h3>
-            </div>
-            <button
-              onClick={() => setActivityOpen(false)}
-              className="w-7 h-7 flex items-center justify-center rounded-md text-stone-400 hover:text-white transition-colors"
-              title="Cerrar actividad"
-            >
-              <X className="w-4 h-4" />
-            </button>
+      {/* Mobile Activity Bottom Sheet (Kept mounted to preserve live stream) */}
+      <div className={`fixed inset-x-3 bottom-20 top-16 z-50 cyber-glass rounded-2xl shadow-2xl flex-col overflow-hidden border border-pale-700/40 md:hidden animate-fade-in ${activityOpen ? 'flex' : 'hidden'}`}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-accent-500/10 bg-stone-950/80">
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-sm font-semibold text-stone-100">Live Activity</h3>
           </div>
-          <div className="flex-1 min-h-0">
-            <LiveActivity onSyncEvent={handleSyncEvent} />
-          </div>
+          <button
+            onClick={() => setActivityOpen(false)}
+            className="w-7 h-7 flex items-center justify-center rounded-md text-stone-400 hover:text-white transition-colors cursor-pointer"
+            title="Cerrar actividad"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
-      )}
+        <div className="flex-1 min-h-0">
+          <LiveActivity onSyncEvent={handleSyncEvent} />
+        </div>
+      </div>
     </>
   );
 }

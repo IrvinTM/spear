@@ -1,15 +1,49 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, AudioLines, Volume2, Pause, Download } from 'lucide-react';
+import { Bot, AudioLines, Volume2, Pause, Download, Trash2 } from 'lucide-react';
 import { playThinkingCue, playCompleteCue, playErrorCue } from '@/lib/client/audio-cues';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
+const DEFAULT_MESSAGES: Message[] = [
+  { role: 'assistant', content: '¡Hola! Soy Campus Copilot. ¿En qué te ayudo hoy?' }
+];
+
 export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: '¡Hola! Soy Campus Copilot. ¿En qué te ayudo hoy?' }
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('spear_chat_history');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return DEFAULT_MESSAGES;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('spear_chat_history', JSON.stringify(messages));
+    } catch {}
+  }, [messages]);
+
+  useEffect(() => {
+    const handleExternalMessage = (e: Event) => {
+      const customEvent = e as CustomEvent<{ user: string; assistant: string }>;
+      if (customEvent.detail) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'user', content: customEvent.detail.user },
+          { role: 'assistant', content: customEvent.detail.assistant },
+        ]);
+      }
+    };
+    window.addEventListener('copilot:external-message', handleExternalMessage);
+    return () => window.removeEventListener('copilot:external-message', handleExternalMessage);
+  }, []);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTalking, setIsTalking] = useState(false);
@@ -150,6 +184,14 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
     a.click();
   };
 
+  const handleClearChat = () => {
+    stopAudio();
+    setMessages(DEFAULT_MESSAGES);
+    try {
+      localStorage.removeItem('spear_chat_history');
+    } catch {}
+  };
+
   const statusText = isTalking ? 'Hablando...' : isAudioLoading ? 'Preparando voz...' : isLoading ? 'Pensando...' : 'En línea';
 
   return (
@@ -157,16 +199,25 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
       {expanded && (
         <>
           {/* Header */}
-          <div className="p-4 border-b border-accent-500/10 flex items-center gap-4 bg-stone-950/40">
-            <div className={`relative w-12 h-12 rounded-full overflow-hidden border-2 flex-shrink-0 bg-stone-950/60 transition-colors duration-300 ${isTalking ? 'border-pale-400 shadow-[0_0_15px_rgba(166,172,205,0.3)]' : 'border-pale-600/40'}`}>
-              <div className="absolute inset-0 flex items-center justify-center">
-                {isTalking ? <AudioLines className="w-6 h-6 text-pale-300 animate-pulse" /> : <Bot className="w-6 h-6 text-stone-400" />}
+          <div className="p-4 border-b border-accent-500/10 flex items-center justify-between bg-stone-950/40">
+            <div className="flex items-center gap-4">
+              <div className={`relative w-12 h-12 rounded-full overflow-hidden border-2 flex-shrink-0 bg-stone-950/60 transition-colors duration-300 ${isTalking ? 'border-pale-400 shadow-[0_0_15px_rgba(166,172,205,0.3)]' : 'border-pale-600/40'}`}>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {isTalking ? <AudioLines className="w-6 h-6 text-pale-300 animate-pulse" /> : <Bot className="w-6 h-6 text-stone-400" />}
+                </div>
+              </div>
+              <div>
+                <h2 className="font-semibold text-stone-100 text-sm">Assistant Chat</h2>
+                <p className="text-xs text-pale-400 font-medium">{statusText}</p>
               </div>
             </div>
-            <div>
-              <h2 className="font-semibold text-stone-100 text-sm">Assistant Chat</h2>
-              <p className="text-xs text-pale-400 font-medium">{statusText}</p>
-            </div>
+            <button
+              onClick={handleClearChat}
+              className="text-stone-500 hover:text-rose-400 p-1.5 rounded-lg hover:bg-stone-800/60 transition-colors"
+              title="Borrar historial"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Messages */}

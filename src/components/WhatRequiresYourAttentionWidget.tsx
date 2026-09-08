@@ -124,10 +124,10 @@ export function WhatRequiresYourAttentionWidget() {
   // Minimized / Hidden State: Clean, understated floating pill
   if (hidden) {
     return (
-      <div className="flex items-center justify-center w-full my-2">
+      <div className="flex items-center justify-center w-full my-2 pointer-events-auto relative z-20">
         <button
           onClick={handleToggleHide}
-          className="group flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-900/90 hover:bg-stone-800/90 border border-stone-800 hover:border-stone-700 text-stone-300 hover:text-stone-100 text-xs transition-colors shadow-md backdrop-blur-md cursor-pointer"
+          className="group flex items-center gap-2 px-4 py-2 rounded-full bg-stone-900/95 hover:bg-stone-800 border border-stone-700 text-stone-200 text-xs transition-all shadow-lg backdrop-blur-md cursor-pointer active:scale-95"
           title="Mostrar widget de atención"
         >
           <span className="w-2 h-2 rounded-full bg-stone-400 group-hover:bg-accent-400 transition-colors" />
@@ -229,7 +229,7 @@ export function WhatRequiresYourAttentionWidget() {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto my-2 px-2 animate-fade-in">
+    <div className="w-full max-w-3xl mx-auto my-2 px-2 animate-fade-in relative z-20 pointer-events-auto">
       {/* Main Container Card — Muted, refined stone dark theme */}
       <div className="rounded-2xl bg-stone-900/95 border border-stone-800/90 p-5 shadow-xl backdrop-blur-md transition-all">
         {/* Header */}

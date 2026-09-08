@@ -11,6 +11,8 @@ import {
   createSessionAction,
 } from './actions';
 import type { SyncStatus, TodoItem } from '@/lib/types';
+import { Eye, EyeOff } from 'lucide-react';
+import { QuickAskBar } from '@/components/QuickAskBar';
 import { useSidebar } from '@/components/SidebarContext';
 
 function formatRelativeDate(dateStr: string | null): string {
@@ -55,6 +57,23 @@ export function DashboardClient({
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [syncError, setSyncError] = useState('');
   const [characterPose, setCharacterPose] = useState<CharacterPose>('idle');
+  const [characterHidden, setCharacterHidden] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('spear_hide_character');
+      if (stored !== null) return stored === 'true';
+    }
+    return hideCharacter;
+  });
+
+  const toggleCharacter = () => {
+    setCharacterHidden((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('spear_hide_character', String(next));
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -114,17 +133,30 @@ export function DashboardClient({
 
   return (
     <>
-      {/* Character — centered within the main content area (accounting for sidebar), resting above bottom bar */}
-      {!hideCharacter && (
-        <div className={`fixed top-0 bottom-20 right-0 max-md:left-0 z-0 pointer-events-none transition-all duration-300 ${collapsed ? 'left-0' : 'left-60'}`}>
-          <CharacterViewer
-            characterUrl={`/api/characters/${activeCharacter}`}
-            animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
-            talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
-            pose={characterPose}
-            className="w-full h-full"
-          />
-        </div>
+      {/* Character — placed beside widgets on desktop, never blocking */}
+      {!characterHidden && (
+        <>
+          {/* Desktop: Pinned to the right side next to widgets */}
+          <div className="fixed top-12 bottom-24 right-4 w-[380px] xl:w-[460px] z-0 pointer-events-none hidden lg:block transition-all duration-300">
+            <CharacterViewer
+              characterUrl={`/api/characters/${activeCharacter}`}
+              animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
+              talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
+              pose={characterPose}
+              className="w-full h-full pointer-events-none"
+            />
+          </div>
+          {/* Mobile: Compact non-blocking viewer at the top */}
+          <div className="lg:hidden w-full h-[220px] relative pointer-events-none my-2 z-0 block">
+            <CharacterViewer
+              characterUrl={`/api/characters/${activeCharacter}`}
+              animationUrl={activeAnimation !== 'procedural' ? `/api/animations/${activeAnimation}` : undefined}
+              talkingAnimationUrl={activeTalkingAnimation !== 'procedural' ? `/api/animations/${activeTalkingAnimation}` : undefined}
+              pose={characterPose}
+              className="w-full h-full pointer-events-none"
+            />
+          </div>
+        </>
       )}
 
       {/* Sync error — top overlay */}
@@ -134,44 +166,61 @@ export function DashboardClient({
         </div>
       )}
 
-      {/* Bottom bar — todos + sync, pinned to bottom */}
+      {/* Bottom controls area — QuickAskBar + Status & Sync bar */}
       <div className={`fixed bottom-0 max-md:bottom-16 right-0 z-20 max-md:left-0 pointer-events-none transition-all duration-300 ${collapsed ? 'left-0' : 'md:left-60'}`}>
-        {/* Compact status bar */}
-        <div className="pointer-events-auto mx-6 mb-6 max-md:mx-3 max-md:mb-2 flex items-center gap-3 max-md:gap-2 px-4 py-2.5 max-md:px-3 max-md:py-2 cyber-glass rounded-xl shadow-lg">
-          {/* Sync status dot + text */}
-          <div className="flex items-center gap-2 text-xs text-stone-500">
-            {syncStatus.status !== 'never' && (
-              <span className={`w-2 h-2 rounded-full shrink-0 ${
-                syncStatus.status === 'success' ? 'bg-success' : syncStatus.status === 'failed' ? 'bg-danger' : 'bg-warning'
-              }`} />
-            )}
-            <span suppressHydrationWarning className="hidden sm:inline">
-              {syncStatus.status === 'never' ? 'Not synced' : `Synced ${formatRelativeDate(syncStatus.lastSync)}`}
-            </span>
+        <div className="flex flex-col gap-2 mx-6 mb-6 max-md:mx-3 max-md:mb-2">
+          {/* Quick Ask Bar to interact with character directly */}
+          <div className="max-w-xl">
+            <QuickAskBar />
           </div>
 
-          {/* Stats chips */}
-          {syncStatus.status !== 'never' && (
-            <div className="hidden md:flex items-center gap-2 text-xs text-stone-500">
-              <span>{syncStatus.coursesCount} courses</span>
-              <span className="text-stone-700">/</span>
-              <span>{syncStatus.assignmentsCount} assignments</span>
+          {/* Compact status bar */}
+          <div className="pointer-events-auto flex items-center gap-3 max-md:gap-2 px-4 py-2.5 max-md:px-3 max-md:py-2 cyber-glass rounded-xl shadow-lg">
+            {/* Sync status dot + text */}
+            <div className="flex items-center gap-2 text-xs text-stone-500">
+              {syncStatus.status !== 'never' && (
+                <span className={`w-2 h-2 rounded-full shrink-0 ${
+                  syncStatus.status === 'success' ? 'bg-success' : syncStatus.status === 'failed' ? 'bg-danger' : 'bg-warning'
+                }`} />
+              )}
+              <span suppressHydrationWarning className="hidden sm:inline">
+                {syncStatus.status === 'never' ? 'Not synced' : `Synced ${formatRelativeDate(syncStatus.lastSync)}`}
+              </span>
             </div>
-          )}
 
-          <div className="flex items-center gap-1.5 text-xs text-stone-400 ml-auto">
-            <span className={`w-1.5 h-1.5 rounded-full ${activeTodos.length > 0 ? 'bg-pale-400' : 'bg-stone-600'}`} />
-            {activeTodos.length} active homework{activeTodos.length !== 1 ? 's' : ''}
+            {/* Stats chips */}
+            {syncStatus.status !== 'never' && (
+              <div className="hidden md:flex items-center gap-2 text-xs text-stone-500">
+                <span>{syncStatus.coursesCount} courses</span>
+                <span className="text-stone-700">/</span>
+                <span>{syncStatus.assignmentsCount} assignments</span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-1.5 text-xs text-stone-400 ml-auto">
+              <span className={`w-1.5 h-1.5 rounded-full ${activeTodos.length > 0 ? 'bg-pale-400' : 'bg-stone-600'}`} />
+              {activeTodos.length} active homework{activeTodos.length !== 1 ? 's' : ''}
+            </div>
+
+            {/* Avatar Toggle Button */}
+            <button
+              onClick={toggleCharacter}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-stone-900/80 hover:bg-stone-800 text-stone-400 hover:text-stone-200 border border-white/[0.08] transition-colors text-xs cursor-pointer"
+              title={characterHidden ? 'Mostrar Personaje 3D' : 'Ocultar Personaje 3D'}
+            >
+              {characterHidden ? <Eye className="w-3.5 h-3.5 text-pale-400" /> : <EyeOff className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">{characterHidden ? 'Avatar' : 'Ocultar'}</span>
+            </button>
+
+            {/* Sync button */}
+            <button
+              onClick={handleSync}
+              disabled={isSyncing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-pale-800 text-pale-300 text-xs font-medium border border-pale-600/40 hover:bg-pale-700 active:bg-pale-900 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            >
+              {isSyncing ? <><span className="spinner spinner--sm" /> Syncing</> : 'Sync'}
+            </button>
           </div>
-
-          {/* Sync button */}
-          <button
-            onClick={handleSync}
-            disabled={isSyncing}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-pale-800 text-pale-300 text-xs font-medium border border-pale-600/40 hover:bg-pale-700 active:bg-pale-900 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-          >
-            {isSyncing ? <><span className="spinner spinner--sm" /> Syncing</> : 'Sync'}
-          </button>
         </div>
       </div>
 
