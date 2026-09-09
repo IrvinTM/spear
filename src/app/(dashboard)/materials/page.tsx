@@ -5,6 +5,8 @@ import { BookOpen, ExternalLink, FileText } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { CourseSummaryClient } from './CourseSummaryClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function MaterialsPage() {
   const vaultExists = await isVaultInitialized();
   if (!vaultExists) {

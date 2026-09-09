@@ -3,6 +3,8 @@ import { AssignmentsClient } from './client';
 import { isVaultInitialized } from '@/lib/vault';
 import { redirect } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AssignmentsPage() {
   const vaultExists = await isVaultInitialized();
   if (!vaultExists) redirect('/setup');
