@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar, MapPin } from 'lucide-react';
+import { Calendar, MapPin, Video } from 'lucide-react';
 
 interface ClassData {
   summary: string;
   start: string;
   end: string;
   location?: string;
+  meetUrl?: string | null;
 }
 
 interface CalendarData {
@@ -44,7 +45,20 @@ export function CalendarWidget() {
           </div>
 
           <div className="relative z-10">
-            <p className="text-sm font-medium text-stone-100">{data.ongoingClass.summary}</p>
+            {data.ongoingClass.meetUrl ? (
+              <a
+                href={data.ongoingClass.meetUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="group/link inline-flex items-start gap-1.5 text-stone-100 hover:text-accent-200 transition-colors"
+                title="Join Google Meet"
+              >
+                <span className="text-sm font-medium break-words">{data.ongoingClass.summary}</span>
+                <Video className="w-3.5 h-3.5 text-accent-400 mt-0.5 shrink-0" />
+              </a>
+            ) : (
+              <p className="text-sm font-medium text-stone-100">{data.ongoingClass.summary}</p>
+            )}
             <p className="text-xs text-accent-200/70 mt-1">
               Ends at {new Date(data.ongoingClass.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
@@ -71,7 +85,20 @@ export function CalendarWidget() {
             <p className="text-xs text-danger">{data.error}</p>
           ) : data.nextClass ? (
             <div>
-              <p className="text-sm font-medium text-stone-100">{data.nextClass.summary}</p>
+              {data.nextClass.meetUrl ? (
+                <a
+                  href={data.nextClass.meetUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group/link inline-flex items-start gap-1.5 text-stone-100 hover:text-accent-200 transition-colors"
+                  title="Join Google Meet"
+                >
+                  <span className="text-sm font-medium break-words">{data.nextClass.summary}</span>
+                  <Video className="w-3.5 h-3.5 text-accent-400 mt-0.5 shrink-0" />
+                </a>
+              ) : (
+                <p className="text-sm font-medium text-stone-100">{data.nextClass.summary}</p>
+              )}
               <p className="text-xs text-stone-400 mt-1">
                 {new Date(data.nextClass.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(data.nextClass.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>

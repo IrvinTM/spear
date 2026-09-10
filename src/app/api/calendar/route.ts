@@ -2,6 +2,21 @@ import { NextResponse } from 'next/server';
 import { getSettings } from '@/lib/settings';
 import ical from 'node-ical';
 
+/**
+ * Extracts a Google Meet link from an ICS event.
+ * Checks the X-GOOGLE-CONFERENCE field first, then falls back to
+ * scanning the DESCRIPTION for a meet.google.com URL.
+ */
+function extractMeetUrl(e: any): string | null {
+  if (e['x-google-conference']) {
+    const url = String(e['x-google-conference']);
+    if (url.startsWith('https://meet.google.com/')) return url;
+  }
+  const desc = String(e.description || '');
+  const match = desc.match(/https:\/\/meet\.google\.com\/[a-z-]+/i);
+  return match ? match[0] : null;
+}
+
 export async function GET() {
   try {
     const settings = getSettings();
@@ -37,12 +52,14 @@ export async function GET() {
         if (e.rrule) {
           // Get occurrences from slightly before 'now' to ensure ongoing events are caught
           const dates = e.rrule.between(new Date(now.getTime() - duration - 1000), nextWeek);
+          const meetUrl = extractMeetUrl(e);
           dates.forEach((date: any) => {
             upcomingEvents.push({
               summary: summary,
               start: new Date(date),
               end: new Date(date.getTime() + duration),
-              location: e.location || ''
+              location: e.location || '',
+              meetUrl
             });
           });
         } else {
@@ -50,7 +67,8 @@ export async function GET() {
             summary: summary,
             start: new Date(e.start),
             end: new Date(e.end ? e.start.getTime() + duration : e.start.getTime() + duration),
-            location: e.location || ''
+            location: e.location || '',
+            meetUrl: extractMeetUrl(e)
           });
         }
       }
@@ -82,13 +100,15 @@ export async function GET() {
         summary: ongoingClass.summary,
         start: ongoingClass.start.toISOString(),
         end: ongoingClass.end.toISOString(),
-        location: ongoingClass.location
+        location: ongoingClass.location,
+        meetUrl: ongoingClass.meetUrl
       } : null,
       nextClass: nextClass ? {
         summary: nextClass.summary,
         start: nextClass.start.toISOString(),
         end: nextClass.end.toISOString(),
-        location: nextClass.location
+        location: nextClass.location,
+        meetUrl: nextClass.meetUrl
       } : null
     });
   } catch (error) {
