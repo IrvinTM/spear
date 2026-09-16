@@ -1,6 +1,7 @@
 'use server';
 
 import { getAttentionData, syncAttentionEventsFromMaterials } from '@/lib/attention/scanner';
+import { getCurrentAcademicWeek } from '@/lib/attention/calendar';
 import { getDb, initSchema } from '@/lib/db';
 import type { AttentionData } from '@/lib/types';
 
@@ -9,9 +10,10 @@ export async function getAttentionAction(forceRefresh = false): Promise<Attentio
     return await getAttentionData(forceRefresh);
   } catch (error) {
     console.error('Error fetching attention data:', error);
+    const { week, label } = getCurrentAcademicWeek(new Date());
     return {
-      currentWeek: 5,
-      currentWeekLabel: 'Semana 5 (Del 07 al 13 de septiembre de 2026)',
+      currentWeek: week,
+      currentWeekLabel: label,
       currentDate: new Date().toISOString(),
       thisWeekEvents: [],
       upcomingEvents: [],

@@ -3,6 +3,12 @@ import { getDb, initSchema } from '@/lib/db';
 import { extractTextFromPDF } from '@/lib/documents';
 import { generateText } from '@/lib/llm';
 import { logActivity } from '@/lib/activity-log';
+import {
+  getAcademicWeekForDate,
+  getCurrentAcademicWeek,
+  getWeekRange,
+  formatCurrentDateEs,
+} from '@/lib/attention/calendar';
 import type { AttentionEvent, AttentionData, AttentionUrgency, AttentionEventType } from '@/lib/types';
 
 interface RawEventExtraction {
@@ -46,6 +52,149 @@ function extractCalendarAndEvalPages(fullText: string): string {
   }
 
   return selectedPages.join('\n\n');
+}
+
+function normalizeTitle(str: string): string {
+  return (str || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function titlesMatch(titleA: string, titleB: string): boolean {
+  const a = normalizeTitle(titleA);
+  const b = normalizeTitle(titleB);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.includes(b) || b.includes(a)) return true;
+  const aWords = new Set(a.split(' '));
+  const bWords = new Set(b.split(' '));
+  const isA1 = aWords.has('1') || aWords.has('primer') || aWords.has('primera');
+  const isB1 = bWords.has('1') || bWords.has('primer') || bWords.has('primera');
+  const isAGrupal = aWords.has('grupal');
+  const isBGrupal = bWords.has('grupal');
+  if (isA1 && isB1 && isAGrupal && isBGrupal) return true;
+  return false;
+}
+
+/**
+ * Marks stale attention events as completed so they stop showing in
+ * "This Week": past due dates, past weeks without due date, submitted
+ * Moodle assignments and todos already marked done. Also collapses
+ * duplicate Moodle rows (same course + title + due date) keeping the
+ * oldest id.
+ */
+function reconcileAttentionEvents(now: Date, currentWeek: number): void {
+  const db = getDb();
+  const cutoff = now.getTime() - 2 * 60 * 60 * 1000;
+
+  try {
+    const active = db.prepare(`
+      SELECT id, course_id, title, due_date, week_number, date_label
+      FROM attention_events
+      WHERE status IN ('upcoming', 'in_progress')
+    `).all() as Array<{
+      id: number;
+      course_id: number;
+      title: string;
+      due_date: string | null;
+      week_number: number | null;
+      date_label: string;
+    }>;
+
+    const completeStmt = db.prepare(
+      "UPDATE attention_events SET status = 'completed', updated_at = datetime('now') WHERE id = ?",
+    );
+    const toComplete = new Set<number>();
+
+    // 1. Past due dates are done — due date is ground truth even if weekNumber is current.
+    for (const ev of active) {
+      if (ev.due_date) {
+        const due = new Date(ev.due_date);
+        if (!Number.isNaN(due.getTime()) && due.getTime() < cutoff) {
+          toComplete.add(ev.id);
+        }
+      } else if (ev.week_number !== null && ev.week_number < currentWeek) {
+        // 2. Syllabus-only events from past weeks with no due date.
+        toComplete.add(ev.id);
+      }
+    }
+
+    // 3. Submitted Moodle work / todos marked done should disappear from attention.
+    try {
+      const doneTodos = db.prepare(`
+        SELECT t.title,
+               COALESCE(a.course_id, am.course_id) as course_id,
+               COALESCE(a.name, t.title) as assign_name
+        FROM todos t
+        LEFT JOIN assignments a ON a.id = t.source_id AND t.source_type = 'assignment'
+        LEFT JOIN assignments am ON am.name = t.title
+        WHERE t.status = 'done'
+      `).all() as Array<{ title: string; course_id: number | null; assign_name: string | null }>;
+
+      const submitted = db.prepare(`
+        SELECT course_id, name FROM assignments
+        WHERE submission_status = 'submitted'
+           OR lower(submission_status) LIKE '%enviado%'
+      `).all() as Array<{ course_id: number; name: string }>;
+
+      const finishedByCourse = new Map<number, string[]>();
+      const pushFinished = (courseId: number | null, name: string | null) => {
+        if (!courseId || !name) return;
+        const list = finishedByCourse.get(courseId) ?? [];
+        list.push(name);
+        finishedByCourse.set(courseId, list);
+      };
+      for (const t of doneTodos) {
+        pushFinished(t.course_id, t.assign_name || t.title);
+        pushFinished(t.course_id, t.title);
+      }
+      for (const s of submitted) pushFinished(s.course_id, s.name);
+
+      if (finishedByCourse.size > 0) {
+        for (const ev of active) {
+          if (toComplete.has(ev.id)) continue;
+          const finished = finishedByCourse.get(ev.course_id);
+          if (!finished) continue;
+          if (finished.some((f) => titlesMatch(ev.title, f))) {
+            toComplete.add(ev.id);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error reconciling finished todos in attention events:', err);
+    }
+
+    // 4. Collapse duplicates: same course + normalized title + same due/week → keep oldest.
+    try {
+      const seen = new Map<string, number>();
+      const ordered = [...active].sort((a, b) => a.id - b.id);
+      for (const ev of ordered) {
+        if (toComplete.has(ev.id)) continue;
+        const key = `${ev.course_id}|${normalizeTitle(ev.title)}|${ev.due_date ?? ''}|${ev.due_date ? '' : String(ev.week_number ?? '')}`;
+        const first = seen.get(key);
+        if (first === undefined) {
+          seen.set(key, ev.id);
+        } else {
+          toComplete.add(ev.id);
+        }
+      }
+    } catch (err) {
+      console.error('Error deduplicating attention events:', err);
+    }
+
+    if (toComplete.size > 0) {
+      const tx = db.transaction((ids: number[]) => {
+        for (const id of ids) completeStmt.run(id);
+      });
+      tx([...toComplete]);
+    }
+  } catch (err) {
+    console.error('Error reconciling attention events:', err);
+  }
 }
 
 /**
@@ -108,9 +257,11 @@ export async function syncAttentionEventsFromMaterials(force = false): Promise<n
 
       if (relevantText.length < 100) continue;
 
+      const { week: promptWeek } = getCurrentAcademicWeek(new Date());
+      const promptDate = formatCurrentDateEs(new Date());
       const prompt = `Eres el asistente académico inteligente de la plataforma SPEAR para la Universidad de El Salvador (Ciclo II-2026).
 Analiza las Orientaciones Académicas de la asignatura "${cm.course_name} (${cm.course_code})".
-La fecha actual es 7 de Septiembre de 2026 (Semana 5 del ciclo).
+La fecha actual es ${promptDate} (Semana ${promptWeek} del ciclo).
 
 Extrae con máxima precisión TODAS las evaluaciones, exámenes parciales, exámenes cortos, tareas, entregas de proyectos, talleres evaluados y defensas programadas en el cronograma/planificación.
 
@@ -233,55 +384,114 @@ No agregues comentarios ni markdown fences, responde con el JSON puro.`;
 
     const nowTime = new Date();
 
+    const findCourseEventsStmt = db.prepare(`
+      SELECT id, title, week_number, due_date, date_label
+      FROM attention_events
+      WHERE course_id = ? AND status IN ('upcoming', 'in_progress')
+    `);
+    const updateMoodleEventStmt = db.prepare(`
+      UPDATE attention_events
+      SET due_date = ?, date_label = ?, week_number = ?, description = ?, priority = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `);
+    const completeEventStmt = db.prepare(
+      "UPDATE attention_events SET status = 'completed', updated_at = datetime('now') WHERE id = ?",
+    );
+
     for (const todo of activeTodos) {
-      // 1. If already submitted in Moodle, skip from active attention events
+      // 1. If already submitted in Moodle, complete any tracked event instead of leaving it stale.
       if (todo.submission_status === 'submitted' || todo.submission_status?.toLowerCase().includes('enviado')) {
+        try {
+          const existing = findCourseEventsStmt.all(todo.course_id) as Array<{
+            id: number;
+            title: string;
+            week_number: number | null;
+            due_date: string | null;
+            date_label: string;
+          }>;
+          for (const ev of existing) {
+            if (titlesMatch(ev.title, todo.title)) {
+              completeEventStmt.run(ev.id);
+            }
+          }
+        } catch (err) {
+          console.error('Error completing submitted attention event:', err);
+        }
         continue;
       }
 
       const moodleDueDate = todo.assign_due_date || todo.todo_due_date || null;
 
-      // 2. If Moodle has a live close/due date, Moodle is the ground truth
+      // 2. If Moodle has a live close/due date, Moodle is the ground truth.
+      // dateLabel stays stable (no frozen "Hoy" text) so re-syncs update the
+      // same row instead of creating duplicates; "Hoy / Hace N días" is computed at read time.
       if (moodleDueDate) {
         const dueObj = new Date(moodleDueDate);
+        if (Number.isNaN(dueObj.getTime())) continue;
+        // Past-due Moodle items must not create new rows; reconcile() completes the old ones.
+        if (dueObj.getTime() < nowTime.getTime() - 2 * 60 * 60 * 1000) {
+          try {
+            const existing = findCourseEventsStmt.all(todo.course_id) as Array<{
+              id: number;
+              title: string;
+              week_number: number | null;
+              due_date: string | null;
+              date_label: string;
+            }>;
+            for (const ev of existing) {
+              if (titlesMatch(ev.title, todo.title)) {
+                completeEventStmt.run(ev.id);
+              }
+            }
+          } catch (err) {
+            console.error('Error completing past-due attention event:', err);
+          }
+          continue;
+        }
+
         const diffMs = dueObj.getTime() - nowTime.getTime();
         const isToday = diffMs >= 0 && diffMs <= 24 * 60 * 60 * 1000;
+        const dateLabel = `Cierre: ${dueObj.toLocaleDateString('es-SV', { timeZone: 'America/El_Salvador' })} (Moodle)`;
+        const weekNumber: number | null = getAcademicWeekForDate(dueObj);
+        const description =
+          todo.description ||
+          (todo.section_name
+            ? `Sección: ${todo.section_name} · Sincronizado de Moodle`
+            : 'Tarea sincronizada desde Moodle');
+        const priority = isToday ? 1 : 2;
 
-        let dateLabel = '';
-        if (isToday) {
-          const esTime = new Intl.DateTimeFormat('es-SV', {
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'America/El_Salvador',
-          }).format(dueObj);
-          dateLabel = `Cierre: Hoy a las ${esTime} (Moodle)`;
-        } else {
-          dateLabel = `Cierre: ${dueObj.toLocaleDateString('es-SV')} (Moodle)`;
+        try {
+          const existing = findCourseEventsStmt.all(todo.course_id) as Array<{
+            id: number;
+            title: string;
+            week_number: number | null;
+            due_date: string | null;
+            date_label: string;
+          }>;
+          const match = existing.find((e) => titlesMatch(e.title, todo.title));
+          if (match) {
+            updateMoodleEventStmt.run(moodleDueDate, dateLabel, weekNumber, description, priority, match.id);
+          } else {
+            insertStmt.run(
+              todo.course_id,
+              todo.course_name,
+              todo.course_code,
+              todo.title,
+              'assignment',
+              null,
+              moodleDueDate,
+              dateLabel,
+              weekNumber,
+              null,
+              description,
+              'Moodle Assignment',
+              priority,
+            );
+            totalInserted++;
+          }
+        } catch (err) {
+          console.error('Error upserting Moodle attention event:', err);
         }
-
-        let weekNumber: number | null = null;
-        if (dueObj >= new Date('2026-09-07T00:00:00-06:00') && dueObj <= new Date('2026-09-13T23:59:59-06:00')) {
-          weekNumber = 5;
-        } else if (dueObj >= new Date('2026-09-14T00:00:00-06:00') && dueObj <= new Date('2026-09-20T23:59:59-06:00')) {
-          weekNumber = 6;
-        }
-
-        insertStmt.run(
-          todo.course_id,
-          todo.course_name,
-          todo.course_code,
-          todo.title,
-          'assignment',
-          null,
-          moodleDueDate,
-          dateLabel,
-          weekNumber,
-          null,
-          todo.description || (todo.section_name ? `Sección: ${todo.section_name} · Sincronizado de Moodle` : 'Tarea sincronizada desde Moodle'),
-          'Moodle Assignment',
-          isToday ? 1 : 2,
-        );
-        totalInserted++;
         continue;
       }
 
@@ -345,28 +555,57 @@ No agregues comentarios ni markdown fences, responde con el JSON puro.`;
 }
 
 /**
- * Computes urgency and time remaining relative to the active semester timeline.
- * Current date baseline: September 7, 2026 (Week 5: Sept 7 - Sept 13, 2026).
+ * Computes urgency and time remaining relative to the live academic calendar.
+ * Due date is ground truth: past-due items are always 'past' even when their
+ * syllabus weekNumber looks current (prevents old assignments sticking in This Week).
  */
 function calculateUrgency(
   dueDateStr: string | null,
   weekNumber: number | null,
   now: Date,
 ): { urgency: AttentionUrgency; daysRemaining: number | null } {
-  // Baseline for Ciclo II-2026:
-  // Week 5 is current week (Sept 7 - Sept 13, 2026)
-  // Week 6 is next week (Sept 14 - Sept 20, 2026)
-  const currentWeek = 5;
-  const week5End = new Date('2026-09-13T23:59:59');
-  const week6End = new Date('2026-09-20T23:59:59');
-  const upcomingEnd = new Date('2026-10-04T23:59:59');
+  const currentWeek = getAcademicWeekForDate(now);
+  const { end: weekEnd } = getWeekRange(currentWeek);
+  const { end: nextWeekEnd } = getWeekRange(currentWeek + 1);
+  const { end: upcomingEnd } = getWeekRange(currentWeek + 3);
+
+  // Due date wins for past / immediate detection.
+  if (dueDateStr) {
+    const due = new Date(dueDateStr);
+    if (!Number.isNaN(due.getTime())) {
+      const diffMs = due.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffMs < -2 * 60 * 60 * 1000) {
+        return { urgency: 'past', daysRemaining: diffDays };
+      }
+      // Items due today / within next 24 hours
+      if (diffMs <= 24 * 60 * 60 * 1000) {
+        return { urgency: 'immediate', daysRemaining: 0 };
+      }
+      if (due <= weekEnd) {
+        return { urgency: 'this_week', daysRemaining: Math.max(1, diffDays) };
+      }
+      if (due <= nextWeekEnd) {
+        return { urgency: 'next_week', daysRemaining: diffDays };
+      }
+      if (due <= upcomingEnd) {
+        return { urgency: 'upcoming', daysRemaining: diffDays };
+      }
+      return { urgency: 'future', daysRemaining: diffDays };
+    }
+  }
 
   if (weekNumber !== null) {
     if (weekNumber < currentWeek) {
       return { urgency: 'past', daysRemaining: (weekNumber - currentWeek) * 7 };
     }
     if (weekNumber === currentWeek) {
-      return { urgency: 'this_week', daysRemaining: 3 };
+      const daysTillEnd = Math.max(
+        0,
+        Math.ceil((weekEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+      );
+      return { urgency: 'this_week', daysRemaining: daysTillEnd };
     }
     if (weekNumber === currentWeek + 1) {
       return { urgency: 'next_week', daysRemaining: 7 };
@@ -375,30 +614,6 @@ function calculateUrgency(
       return { urgency: 'upcoming', daysRemaining: (weekNumber - currentWeek) * 7 };
     }
     return { urgency: 'future', daysRemaining: (weekNumber - currentWeek) * 7 };
-  }
-
-  if (dueDateStr) {
-    const due = new Date(dueDateStr);
-    const diffMs = due.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMs < -2 * 60 * 60 * 1000) {
-      return { urgency: 'past', daysRemaining: diffDays };
-    }
-    // Items due today / within next 24 hours
-    if (diffMs >= -2 * 60 * 60 * 1000 && diffMs <= 24 * 60 * 60 * 1000) {
-      return { urgency: 'immediate', daysRemaining: 0 };
-    }
-    if (due <= week5End || diffDays <= 6) {
-      return { urgency: 'this_week', daysRemaining: Math.max(1, diffDays) };
-    }
-    if (due <= week6End || diffDays <= 13) {
-      return { urgency: 'next_week', daysRemaining: diffDays };
-    }
-    if (due <= upcomingEnd) {
-      return { urgency: 'upcoming', daysRemaining: diffDays };
-    }
-    return { urgency: 'future', daysRemaining: diffDays };
   }
 
   return { urgency: 'upcoming', daysRemaining: null };
@@ -411,12 +626,18 @@ function calculateUrgency(
 export async function getAttentionData(forceRefresh = false): Promise<AttentionData> {
   initSchema();
   const db = getDb();
+  const now = new Date();
+  const { week: currentWeek, label: currentWeekLabel } = getCurrentAcademicWeek(now);
 
   // If table is empty, auto-sync
   const countRow = db.prepare("SELECT COUNT(*) as count FROM attention_events WHERE status != 'completed'").get() as { count: number };
   if (forceRefresh || !countRow || countRow.count === 0) {
     await syncAttentionEventsFromMaterials(forceRefresh);
   }
+
+  // Always reconcile on read (cheap, no LLM): completes past-due, submitted/done,
+  // and duplicate rows so This Week never shows stale assignments.
+  reconcileAttentionEvents(now, currentWeek);
 
   const rows = db.prepare(`
     SELECT 
@@ -448,10 +669,7 @@ export async function getAttentionData(forceRefresh = false): Promise<AttentionD
     updated_at: string;
   }>;
 
-  // Reference date: Sept 7, 2026
-  const now = new Date();
-  const currentWeek = 5;
-
+  // Reference date: live clock + academic calendar (no hardcoded week).
   const events: AttentionEvent[] = rows.map((r) => {
     const { urgency, daysRemaining } = calculateUrgency(r.due_date, r.week_number, now);
     return {
@@ -502,7 +720,7 @@ export async function getAttentionData(forceRefresh = false): Promise<AttentionD
   });
 
   // Partition into:
-  // 1. This Week: current week events (Week 5 or due within Sept 7 - Sept 13)
+  // 1. This Week: current-week events (urgency this_week/immediate or weekNumber == currentWeek)
   const thisWeekEvents = sorted.filter(
     (e) =>
       e.urgency !== 'past' &&
@@ -521,9 +739,10 @@ export async function getAttentionData(forceRefresh = false): Promise<AttentionD
 
   // Generate an attention summary headline
   let summary = '';
-  const nextWeekEvents = upcomingEvents.filter(e => e.urgency === 'next_week' || e.weekNumber === 6);
+  const nextWeekEvents = upcomingEvents.filter(e => e.urgency === 'next_week' || e.weekNumber === currentWeek + 1);
   const examCount = nextWeekEvents.filter(e => e.eventType === 'exam').length;
   const homeworkCount = nextWeekEvents.filter(e => e.eventType === 'assignment' || e.eventType === 'project').length;
+  const nextWeekLabel = `Semana ${currentWeek + 1}`;
 
   if (thisWeekEvents.length > 0) {
     const todayEvents = thisWeekEvents.filter(e => e.urgency === 'immediate' || e.daysRemaining === 0);
@@ -532,13 +751,13 @@ export async function getAttentionData(forceRefresh = false): Promise<AttentionD
         todayEvents.length === 1 ? `la tarea "${todayEvents[0].title}"` : `${todayEvents.length} tareas`
       } con cierre programado para HOY en Moodle (${todayEvents.map(t => t.courseName).join(', ')}).`;
       if (nextWeekEvents.length > 0) {
-        summary += ` Además, prepárate para la próxima semana (Semana 6): tienes ${examCount} exámenes parciales en camino.`;
+        summary += ` Además, prepárate para la próxima semana (${nextWeekLabel}): tienes ${examCount} exámenes parciales en camino.`;
       }
     } else {
-      summary = `Tienes ${thisWeekEvents.length} actividad(es) esta semana (Semana 5) que requieren tu atención.`;
+      summary = `Tienes ${thisWeekEvents.length} actividad(es) esta semana (Semana ${currentWeek}) que requieren tu atención.`;
     }
   } else if (nextWeekEvents.length > 0) {
-    summary = `¡Atención! La próxima semana (Semana 6 · Del 14 al 20 de Septiembre) requiere tu máxima preparación: tienes ${
+    summary = `¡Atención! La próxima semana (${nextWeekLabel}) requiere tu máxima preparación: tienes ${
       examCount > 0 ? `${examCount} examen${examCount > 1 ? 'es' : ''} parcial${examCount > 1 ? 'es' : ''}` : ''
     }${examCount > 0 && homeworkCount > 0 ? ' y ' : ''}${
       homeworkCount > 0 ? `${homeworkCount} entrega${homeworkCount > 1 ? 's' : ''}` : ''
@@ -554,7 +773,7 @@ export async function getAttentionData(forceRefresh = false): Promise<AttentionD
 
   return {
     currentWeek,
-    currentWeekLabel: 'Semana 5 (Del 07 al 13 de septiembre de 2026)',
+    currentWeekLabel,
     currentDate: now.toISOString(),
     thisWeekEvents,
     upcomingEvents,

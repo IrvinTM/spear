@@ -24,6 +24,7 @@ import {
   refreshAttentionAction,
   dismissAttentionEventAction,
 } from '@/app/(dashboard)/dashboard/attention-actions';
+import { getCurrentAcademicWeek } from '@/lib/attention/calendar';
 import type { AttentionData, AttentionEvent } from '@/lib/types';
 
 function getEventTypeBadge(type: AttentionEvent['eventType']) {
@@ -243,7 +244,7 @@ export function WhatRequiresYourAttentionWidget() {
                 </span>
               </div>
               <p className="text-xs text-stone-400 mt-0.5">
-                {data?.currentWeekLabel || 'Semana 5 (Del 07 al 13 de septiembre de 2026)'}
+                {data?.currentWeekLabel || getCurrentAcademicWeek(new Date()).label}
               </p>
             </div>
           </div>
