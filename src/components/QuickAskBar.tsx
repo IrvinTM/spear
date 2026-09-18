@@ -102,7 +102,7 @@ export function QuickAskBar() {
   };
 
   return (
-    <div className="w-full flex flex-col gap-2 pointer-events-auto">
+    <div className="w-full min-w-0 max-w-full flex flex-col gap-2 pointer-events-auto overflow-x-hidden">
       {/* Response speech bubble if active */}
       {latestResponse && (
         <div className="cyber-glass rounded-xl p-3 text-xs text-stone-200 shadow-xl flex items-start gap-2.5 animate-fade-in">
@@ -141,7 +141,7 @@ export function QuickAskBar() {
       )}
 
       {/* Quick Input Bar */}
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 bg-stone-900/70 backdrop-blur-xl rounded-xl p-1.5 border border-white/[0.1] shadow-lg">
+      <form onSubmit={handleSubmit} className="flex items-center gap-2 min-w-0 max-w-full bg-stone-900/70 backdrop-blur-xl rounded-xl p-1.5 border border-white/[0.1] shadow-lg">
         <div className="pl-2.5 text-accent-400">
           <Sparkles className="w-4 h-4" />
         </div>
@@ -151,7 +151,7 @@ export function QuickAskBar() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Pregúntale a tu copiloto..."
           disabled={loading}
-          className="flex-1 bg-transparent text-xs text-stone-200 placeholder-stone-500 outline-none px-2 py-1.5 disabled:opacity-50"
+          className="flex-1 min-w-0 bg-transparent text-base md:text-sm text-stone-200 placeholder-stone-500 outline-none px-2 py-1.5 disabled:opacity-50"
         />
         <button
           type="submit"

@@ -199,7 +199,7 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
   const statusText = isTalking ? 'Hablando...' : isAudioLoading ? 'Preparando voz...' : isLoading ? 'Pensando...' : 'En línea';
 
   return (
-    <div className="bg-transparent flex flex-col h-full overflow-hidden">
+    <div className="bg-transparent flex flex-col h-full min-h-0 min-w-0 max-w-full overflow-hidden">
       {expanded && (
         <>
           {/* Header */}
@@ -225,11 +225,11 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
           </div>
 
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto flex flex-col gap-4 scroll-smooth">
+          <div ref={scrollRef} className="flex-1 min-h-0 min-w-0 p-4 overflow-y-auto overflow-x-hidden flex flex-col gap-4 scroll-smooth">
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`max-w-[80%] rounded-xl p-3 text-sm leading-relaxed ${
+                className={`max-w-[80%] min-w-0 rounded-xl p-3 text-sm leading-relaxed break-words ${
                   msg.role === 'user'
                     ? 'bg-accent-500 text-white self-end rounded-br-none'
                     : 'bg-stone-800/80 text-stone-100 self-start rounded-bl-none border border-white/[0.06]'
@@ -270,7 +270,7 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
       )}
 
       {/* Input bar — always visible */}
-      <form onSubmit={handleSend} className={`p-3 bg-stone-900/40 ${expanded ? 'border-t border-white/[0.06]' : ''} flex gap-2 items-center`}>
+      <form onSubmit={handleSend} className={`p-3 bg-stone-900/40 ${expanded ? 'border-t border-white/[0.06]' : ''} flex gap-2 items-center min-w-0 max-w-full`}>
         {!expanded && (
           <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border-2 transition-colors ${isTalking || isLoading ? 'border-accent-400 bg-accent-500/15' : 'border-white/[0.12] bg-stone-900/60'}`}>
             {isTalking ? <AudioLines className="w-4 h-4 text-accent-300 animate-pulse" /> : isLoading ? <span className="spinner spinner--sm" /> : <Bot className="w-4 h-4 text-stone-400" />}
@@ -281,7 +281,7 @@ export function CopilotChat({ expanded = true }: { expanded?: boolean }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={expanded ? 'Pregúntame algo sobre tus cursos...' : 'Pregúntale al Copilot...'}
-          className="flex-1 bg-stone-950/60 border border-white/[0.1] rounded-lg px-4 py-2 text-sm text-stone-200 placeholder:text-stone-500 focus:outline-none focus:border-accent-400/60 focus:ring-2 focus:ring-accent-500/20 transition-all"
+          className="flex-1 min-w-0 bg-stone-950/60 border border-white/[0.1] rounded-lg px-4 py-2 text-base md:text-sm text-stone-200 placeholder:text-stone-500 focus:outline-none focus:border-accent-400/60 focus:ring-2 focus:ring-accent-500/20 transition-all"
           disabled={isLoading}
         />
         <button

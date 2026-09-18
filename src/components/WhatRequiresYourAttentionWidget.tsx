@@ -189,13 +189,13 @@ export function WhatRequiresYourAttentionWidget() {
         </div>
 
         {/* Title */}
-        <h4 className="text-sm font-semibold text-stone-100 mb-1 leading-snug">
+        <h4 className="text-sm font-semibold text-stone-100 mb-1 leading-snug break-words min-w-0">
           {ev.title}
         </h4>
 
         {/* Description snippet if present */}
         {ev.description && (
-          <p className="text-xs text-stone-400 line-clamp-2 leading-relaxed mb-2">
+          <p className="text-xs text-stone-400 line-clamp-2 leading-relaxed mb-2 break-words min-w-0">
             {ev.description}
           </p>
         )}
@@ -227,7 +227,7 @@ export function WhatRequiresYourAttentionWidget() {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto my-2 px-2 animate-fade-in relative z-20 pointer-events-auto">
+    <div className="w-full min-w-0 max-w-3xl mx-auto my-2 px-2 animate-fade-in relative z-20 pointer-events-auto overflow-x-hidden">
       {/* Main Container Card — Muted, refined stone dark theme */}
       <div className="rounded-2xl bg-stone-900/85 border border-white/[0.08] p-5 shadow-xl backdrop-blur-xl transition-all">
         {/* Header */}

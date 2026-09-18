@@ -1,5 +1,6 @@
 import { SidebarProvider } from '@/components/SidebarContext';
 import { DashboardLayoutWrapper } from '@/components/DashboardLayoutWrapper';
+import { CharacterConfigProvider } from '@/components/CharacterConfigContext';
 import { getSettings } from '@/lib/settings';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -14,9 +15,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {settings.background && <div className="fixed inset-0 bg-stone-950/60 z-0 pointer-events-none" />}
       
       <SidebarProvider>
-        <DashboardLayoutWrapper>
-          {children}
-        </DashboardLayoutWrapper>
+        <CharacterConfigProvider
+          character={settings.character}
+          animation={settings.animation}
+          talkingAnimation={settings.talkingAnimation}
+          initialHidden={settings.hideCharacter || false}
+        >
+          <DashboardLayoutWrapper>
+            {children}
+          </DashboardLayoutWrapper>
+        </CharacterConfigProvider>
       </SidebarProvider>
     </div>
   );
